@@ -13,9 +13,6 @@ $(document).on("ready",function(){
 		
 	}
     
-    var buttongroup_width = $("#media_controls").width();
-    $("#media_controls").css({"box-shadow":"-"+buttongroup_width+"px -3px #4986D4"});
-    
     window.player = document.getElementById("_player");
 	
     settings.items = parseInt($(".item-row").length);
@@ -77,14 +74,23 @@ $(document).on("ready",function(){
             $ele.find(".row-status").addClass("fa-play");
             console.log("attempting pause");
             player.pause();
+            $("#progress_bar").stop(true);
             settings.status = 0;
         } else if (settings.current === item_id){
             $ele.find(".row-status").removeClass("fa-play");
             $ele.find(".row-status").addClass("fa-pause");
             console.log("attempting resume");
+            console.log("time (in ms) remaining: "+parseInt(player.duration - player.currentTime)*1000);
             player.play();
-            settings.status = 1;
+            $(player).on("play",function(){
+				$("#progress_bar").animate(
+					{ width: "100%" }, parseInt(player.duration - player.currentTime)*1000,"linear"
+				);
+			});
         } else {
+			$("#progress_bar").stop(true);
+			$("#progress_bar").animate({
+				width: "0%"},500);
             var title   = $ele.children(".item-title").prop("title");
             settings.current = parseInt(item_id);
             $(".row-status").removeClass("fa-pause fa-play");
@@ -109,6 +115,11 @@ $(document).on("ready",function(){
                 "type":"audio/mpeg"});
                 console.log("loading file...");
                 player.load();
+                $(player).on("play",function(){
+					console.log("animation duration = "+((player.duration)*1000));
+					$("#progress_bar").animate({
+						width: "100%"},parseInt(player.duration)*1000,"linear");
+				});
                 settings.status = 1;
             }).fail(function(){
                 console.log("failed getting url from server.");
@@ -203,6 +214,10 @@ $(document).on("ready",function(){
                     }
                 }
             }
+            $("#notification_bar").fadeIn(400);
+            window.setTimeout(function(){
+				$("#notification_bar").fadeOut(400);
+			},4000)
         }
     });
 	

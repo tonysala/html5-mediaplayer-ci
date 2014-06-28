@@ -120,6 +120,7 @@ html, body {
 	overflow-y: auto;
 	z-index: 500;
 	transition: all 0.4s ease 0s;
+	padding:0!important;
 }
 .sidebar.dark {
     border-color:#141414;
@@ -148,7 +149,7 @@ html, body {
     width:100%;
 }
 #media_controls button {
-    width:33.33%;
+    width:33.334%;
     height:40px;
     margin:0;
     padding:0;
@@ -156,7 +157,6 @@ html, body {
     border-radius:0;
 }
 #media_controls {
-    margin-left:-15px;
     width:100%;
     position:absolute;
     bottom:0;
@@ -165,11 +165,54 @@ html, body {
     text-align:center;
 }
 .toolbar_buttons {
-    padding:12px;
+    padding:10px;
 }
 .toolbar_buttons > button.btn-default {
     border-color:#ddd;
 }
 .toolbar_buttons > button.btn-primary {
     border-color: #427DAF;
+}
+#sidebar_list {
+	width:100%;
+	margin:0;
+	padding:0;
+}
+.sidebar-row:first-child {
+	border-top:0;
+}
+.sidebar-row:last-child {
+	border-bottom:1px solid #C3C8CA;
+}
+.sidebar-row {
+	padding:3px;
+	cursor:pointer;
+	color: #5F767F;
+	font-weight:800;
+	margin:0px 0;
+	background:#DCE8EC;
+	border-top:1px solid #C3C8CA;
+}
+#notification_bar {
+	position: absolute;
+	z-index: 10000;
+	border-bottom: 1px solid #aaa;
+	width: 100%;
+	bottom: 0;
+	background: #303030;
+	color: #F0B00C;
+}
+#notification_bar marquee {
+	font-weight:800;
+}
+#notification_bar span {
+	color:white;
+}
+#progress_container {
+	height:3px;
+}
+#progress_bar {
+	width: 0%;
+	background: rgb(81, 157, 255);
+	height: 3px;
 }

@@ -1,9 +1,17 @@
+<div id="notification_bar" style="display:none;">
+	<marquee behavior="scroll" direction="left">NOW PLAYING: <span>Fire Inside - Gemini</span></marquee>
+</div>
 <div class="container-fluid <?=$skin?>" id="control_bar" style="width:100%">
     <div class="row">
-        <div class="col-md-8 hidden-xs">
+        <div class="col-md-4 hidden-xs">
             <span>Note&trade; PRE-ALPHA v0.09 &nbsp;&nbsp;</span>
         </div>
-        <div class="col-md-4 col-xs-12">
+        <div class="col-md-6 col-md-offset-2 col-xs-12">
+			<div class="btn-group toolbar_buttons">
+                <button class="btn btn-default" id="control_back"><i class="fa fa-backward"></i></button>
+                <button class="btn btn-default" id="control_play"><i class="fa fa-play"></i></button>
+                <button class="btn btn-default" id="control_next"><i class="fa fa-forward"></i></button>
+            </div>
             <div class="btn-group toolbar_buttons">
                 <button type="button" class="btn btn-default" id="shuffle"><i class="fa fa-random"></i></button>
                 <button type="button" class="btn btn-default" id="loop"><i class="fa fa-refresh"></i></button>
@@ -16,15 +24,18 @@
             </div>
         </div>
     </div>
+    <div class="row" id="progress_container">
+		<div id="progress_bar"></div>
+    </div>
 </div>
 <div class="container-fluid page-wrapper">
 	<div class="row">
 		<div class="col-md-3 hidden-sm hidden-xs sidebar <?=$skin?>">
-            <div class="btn-group" id="media_controls">
-                <button class="btn btn-default" id="control_back"><i class="fa fa-backward"></i></button>
-                <button class="btn btn-default" id="control_play"><i class="fa fa-play"></i></button>
-                <button class="btn btn-default" id="control_next"><i class="fa fa-forward"></i></button>
-            </div>
+            <div id="sidebar_list">
+				<div class="sidebar-row">PLAYLIST 1</div>
+				<div class="sidebar-row">LIBRARY</div>
+				<div class="sidebar-row">SETTINGS</div>
+			</div>
 		</div>
 		<div class="col-md-9 content <?=$skin?>">
 			<div class="row header-row <?=$skin?>">
@@ -49,10 +60,11 @@
     <source src="" type="audio/mpeg">
 </audio>
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-    <li><a tabindex="-1">Action</a></li>
-    <li><a tabindex="-1">Another action</a></li>
-    <li><a tabindex="-1">Something else here</a></li>
+    <li><a tabindex="-1">Add to Playlist &gt;</a></li>
+    <li><a tabindex="-1">Add to Queue</a></li>
+    <li><a tabindex="-1">Edit ID3 Tags</a></li>
+    <li><a tabindex="-1">Rate &gt;</a></li>
     <li class="divider"></li>
-    <li><a tabindex="-1">Separated link</a></li>
+    <li><a tabindex="-1">Delete from Library</a></li>
 </ul>
     
