@@ -33,14 +33,17 @@ html, body {
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
     -o-transition: all 0.4s ease;
-	padding:6px 0;
+	padding:0;
 	border-top: 1px solid #FFFFFF;
 	border-bottom: 1px solid #ECECEC;
 	background: #FAFAFA;
 	cursor: pointer;
 	color: #444;
 	font-size:12px;
-    line-height: 12px;
+    line-height: 24px;
+}
+.header-row {
+	padding:6px 0;
 }
 .selected-row {
     transition: all 0.4s ease;
@@ -91,6 +94,7 @@ html, body {
 	overflow: hidden;
 }
 #contextmenu {
+	font-size:11px;
 	position: fixed;
 	left:0;
 	top:0;
@@ -163,6 +167,7 @@ html, body {
 }
 .row-status-container {
     text-align:center;
+    padding: 6px 0;
 }
 .toolbar_buttons {
     padding:10px;
@@ -215,4 +220,10 @@ html, body {
 	width: 0%;
 	background: rgb(81, 157, 255);
 	height: 3px;
+}
+.btn-default:focus {
+	background: inherit!important;
+}
+.btn {
+	box-shadow: 1px 1px 0px rgba(0,0,0,.05);
 }

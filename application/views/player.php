@@ -1,31 +1,31 @@
 <div id="notification_bar" style="display:none;">
-	<marquee behavior="scroll" direction="left">NOW PLAYING: <span>Fire Inside - Gemini</span></marquee>
+	<marquee behavior="scroll" direction="left">NOW PLAYING: <span id="notification_text">Fire Inside - Gemini</span></marquee>
 </div>
 <div class="container-fluid <?=$skin?>" id="control_bar" style="width:100%">
+    <div class="row" id="progress_container">
+		<div id="progress_bar"></div>
+    </div>
     <div class="row">
         <div class="col-md-4 hidden-xs">
-            <span>Note&trade; PRE-ALPHA v0.09 &nbsp;&nbsp;</span>
+            <span>Note&trade; PRE-ALPHA v0.02 &nbsp;&nbsp;</span>
         </div>
         <div class="col-md-6 col-md-offset-2 col-xs-12">
 			<div class="btn-group toolbar_buttons">
-                <button class="btn btn-default" id="control_back"><i class="fa fa-backward"></i></button>
-                <button class="btn btn-default" id="control_play"><i class="fa fa-play"></i></button>
-                <button class="btn btn-default" id="control_next"><i class="fa fa-forward"></i></button>
+				<button class="btn btn-default" id="control_prev" title='Previous'><i class="fa fa-backward"></i></button>
+                <button class="btn btn-default" id="control_playpause" title='Play / Pause'><i class="fa fa-play"></i></button>
+                <button class="btn btn-default" id="control_next" title='Next'><i class="fa fa-forward"></i></button>
             </div>
             <div class="btn-group toolbar_buttons">
-                <button type="button" class="btn btn-default" id="shuffle"><i class="fa fa-random"></i></button>
-                <button type="button" class="btn btn-default" id="loop"><i class="fa fa-refresh"></i></button>
-                <button type="button" class="btn btn-default" id="settings"><i class="fa fa fa-gear"></i></button>
+                <button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-random"></i></button>
+                <button type="button" class="btn btn-default" id="loop" title='Play on Repeat!'><i class="fa fa-refresh"></i></button>
+                <button type="button" class="btn btn-default" id="settings" title='Fiddle with the knobs!'><i class="fa fa fa-gear"></i></button>
             </div>
             <div class="btn-group toolbar_buttons">
-                <button type="button" class="btn btn-default" id="volume_off"><i class="fa fa-volume-off"></i></button>
-                <button type="button" class="btn btn-default" id="volume_down" data-mod="-0.1"><i class="fa fa-volume-down"></i></button>
-                <button type="button" class="btn btn-default" id="volume_up" data-mod="0.1"><i class="fa fa fa-volume-up"></i></button>
+                <button type="button" class="btn btn-default" id="volume_off" title='Mute'><i class="fa fa-volume-off"></i></button>
+                <button type="button" class="btn btn-default" id="volume_down" data-mod="-0.1" title='Volume down'><i class="fa fa-volume-down"></i></button>
+                <button type="button" class="btn btn-default" id="volume_up" data-mod="0.1" title='Crank up the volume!'><i class="fa fa fa-volume-up"></i></button>
             </div>
         </div>
-    </div>
-    <div class="row" id="progress_container">
-		<div id="progress_bar"></div>
     </div>
 </div>
 <div class="container-fluid page-wrapper">
@@ -56,8 +56,8 @@
 		</div>
 	</div>
 </div>
-<audio style="display:none;" id="_player" autoplay>
-    <source src="" type="audio/mpeg">
+<audio style="display:none;" id="_player" autoplay preload>
+    <source src='' type='audio/mpeg'>
 </audio>
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
     <li><a tabindex="-1">Add to Playlist &gt;</a></li>
