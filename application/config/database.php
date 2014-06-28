@@ -48,11 +48,11 @@
 $active_group = 'default';
 $active_record = TRUE;
 
-$db['default']['hostname'] = 'sqlite:/var/www/player/sqlite/musicinfo';
-$db['default']['username'] = '';
+$db['default']['hostname'] = 'localhost';
+$db['default']['username'] = 'root';
 $db['default']['password'] = '';
-$db['default']['database'] = '';
-$db['default']['dbdriver'] = 'pdo';
+$db['default']['database'] = 'player';
+$db['default']['dbdriver'] = 'mysqli';
 $db['default']['dbprefix'] = '';
 $db['default']['pconnect'] = TRUE;
 $db['default']['db_debug'] = TRUE;

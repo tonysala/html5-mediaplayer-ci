@@ -4,24 +4,24 @@ class Main extends CI_Controller {
 	
 	public function __construct(){
 		parent::__construct();
-		$this->itemlist->generate_object_list();
+		$this->itemlist->initialise();
+		//$this->itemlist->load_db_objects('music');
 	}
 	
 	public function index(){
 		
 		ini_set('display_errors',1); 
 		error_reporting(E_ALL);
-		
-		define('APP_PATH', getcwd());
-		
-		$path = "";
+				
 		$valid_exts = $this->config->item('allowed_exts');
 		
 		$skin = $this->config->item('skin');
-		
-		$paths = $this->config->item('watch_paths');
+		if (false){
+			var_dump($this->itemlist->write_files_to_db());
+		}
+		$files = array();
 		$files = $this->itemlist->get_list_as_paths();
-		$data = array("files"=>$files,"skin"=>$skin);
+		$data  = array("files"=>$files,"skin"=>$skin);
 		
 		$this->load->view("layout/header");
 		$this->load->view("player", $data);

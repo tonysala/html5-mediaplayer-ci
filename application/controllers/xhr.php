@@ -1,10 +1,14 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+ini_set('display_errors',1); 
+error_reporting(E_ALL);
+
 class Xhr extends CI_Controller {
 	
 	public function __construct(){
 		parent::__construct();
-		$this->itemlist->generate_object_list();
+		$this->itemlist->initialise();
+		//$this->itemlist->load_db_objects('music');
 	}
 	
 	public function index(){
@@ -12,8 +16,6 @@ class Xhr extends CI_Controller {
 	}
 	
 	public function get_url(){
-		ini_set('display_errors',1); 
-		error_reporting(E_ALL);
 		$id = $this->input->get("id");
 		$title = $this->input->get("title");
 		
@@ -23,5 +25,17 @@ class Xhr extends CI_Controller {
 		} else {
 			print $path;
 		}
+	}
+	
+	public function update_db(){
+		if ($watch = $this->input->get("watch[]")){
+			
+		}
+		return json_encode(
+			array(
+				"found" => count($this->generate_files_list($watch)),
+				"new"   => 0
+			)
+		);
 	}
 }
