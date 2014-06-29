@@ -20,6 +20,7 @@ html, body {
     height: 100%;
     margin:0;
     padding:0;
+    overflow: hidden;
 }
 * {
 	font-family: 'Source Code Pro';
@@ -99,8 +100,21 @@ html, body {
 	left:0;
 	top:0;
 }
+#playlist_list {
+	font-size:11px;
+	position: relative;
+	width:100%;
+	border:0;
+	box-shadow:none;
+	left:0;
+	top:0;
+}
+#playlist_list li {
+	padding-left:8px;
+}
 #contextmenu li a {
 	cursor: pointer;
+	outline:0!important;
 }
 #control_bar{
     width:100%;
@@ -201,9 +215,10 @@ html, body {
 	z-index: 10000;
 	border-bottom: 1px solid #aaa;
 	width: 100%;
-	bottom: 0;
+	bottom: -30px;
 	background: #303030;
 	color: #F0B00C;
+	padding:4px 0;
 }
 #notification_bar marquee {
 	font-weight:800;
@@ -224,4 +239,19 @@ html, body {
 }
 .btn {
 	box-shadow: 1px 1px 0px rgba(0,0,0,.05);
+}
+.rating-container {
+	display: inline-block;
+}
+.rating {
+	display: table-cell!important;
+	line-height: 8px!important;
+	letter-spacing: 5px;
+	font-size:13px;
+}
+#playlist_list {
+	display:block;
+}
+.hidden-list-item {
+	padding-left:5px;
 }

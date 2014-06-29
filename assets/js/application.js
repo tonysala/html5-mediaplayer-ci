@@ -21,7 +21,7 @@ $(document).on("ready",function(){
 			pointer : -1
 		},
 		last_api_call : undefined,
-		
+		notification  : false
 	}
 	
 	window.elements = {
@@ -33,12 +33,16 @@ $(document).on("ready",function(){
     
     // Define the player element...
     window.player = document.getElementById("_player");
+      
+    // Do setup stuff
+    console.log($("#playlist_list"));
+    $("#playlist_list").slideUp();
         
     // Function Definitions
     var item_selected = function($ele){
+		app_vars.selected = $ele.data().id;
         $(".item-row").removeClass("selected-row");
 		if (!$ele.hasClass("selected-row")){
-			app_vars.selected = $(this).data().id;
 			$ele.addClass("selected-row");
 		}
     }
@@ -184,16 +188,62 @@ $(document).on("ready",function(){
             
             if (title !== undefined){
 				var $bar = $("#notification_bar");
-				$bar.find("notification_text").text(title);
+				$bar.find("#notification_text").text(title);
+				clearTimeout(window.timeout_id);
 				if (app_vars.notification === false){
-					$bar.fadeIn(400);
-					var timeout_id = window.setTimeout(function(){
-						$bar.fadeOut(400);
-					},20000);
+					app_vars.notification = true;
+					$bar.animate({bottom:"0px"},300,'swing');
 				}
+				window.timeout_id = setTimeout(function(){
+					$bar.animate({bottom:"-30px"},300,'swing');
+					app_vars.notification = false;
+				},12000);
 			}
 			
         }
+	}
+
+	var hide_menu = function(){
+		$("#contextmenu").hide();
+		$("#playlist_list").slideUp();
+		app_vars.contextbox = false;
+		return;
+	}
+	
+	var show_menu = function(){
+		var pos_y = event.clientY;
+		var pos_x = event.clientX;
+		var window_height = $(window).height();
+		var window_width  = $(window).width();
+		var menu_height   = $("#contextmenu").height();
+		var menu_width    = $("#contextmenu").width();
+		if ((pos_y + menu_height) > window_height){
+			pos_y = window_height - (menu_height + 20);
+		}
+		if ((pos_x + menu_width) > window_width){
+			pos_x = window_width - (menu_width + 10);
+		}
+		$("#contextmenu").css({
+			left: pos_x,
+			top: pos_y
+		});
+		// We can safely say the menu will now show
+		app_vars.contextbox = true;
+		// Open window
+		$("#contextmenu").fadeIn("200");
+	}
+
+	var set_rating = function(rating){
+		console.log("setting rating to "+rating);
+		var $elements = $("#rating_container").children();
+		console.log($elements);
+		if (rating == 0){
+			$elements.addClass("fa-star-o").removeClass("fa-star");
+		} else {
+			$element = $elements.eq(rating).addClass("fa-star-o").removeClass("fa-star");;
+			$element.prevAll().addClass("fa-star").removeClass("fa-star-o");
+			$element.nextAll().addClass("fa-star-o").removeClass("fa-star");
+		}
 	}
     // End of functions
     
@@ -204,44 +254,37 @@ $(document).on("ready",function(){
         item_clicked($(this));
 	});
 	
+	// ContextMenu Code
 	$(".items-container , #contextmenu").on("contextmenu",function(){
 		console.log("prevent system contextmenu");
         return false;
 	});
 	
 	$(".items-container").on("mousedown",function(event){
-		if (event.which === 3){
-			var in_chain = ($(event.target).parents('.item-row').length > 0);
-			if (in_chain){
-				item_selected($(event.target).closest('.item-row'));
-			}
+		var in_chain = ($(event.target).parents('.item-row').length > 0);
+		var $row = $(event.target).closest(".item-row");
+		console.log($row);
+		console.log($row.data().id)
+		if (event.which === 3){	
+			// If menu is already visible hide it and return
 			if ($("#contextmenu").css("display") !== "none"){
-				$("#contextmenu").hide();
+				hide_menu();
 			}
-			var pos_y = event.clientY;
-			var pos_x = event.clientX;
-			var window_height = $(window).height();
-			var window_width  = $(window).width();
-			var menu_height   = $("#contextmenu").height();
-			var menu_width    = $("#contextmenu").width();
-			if ((pos_y + menu_height) > window_height){
-				pos_y = window_height - (menu_height + 20);
+			// Check if right clicked over an item, and select it else return
+			if (in_chain){
+				item_selected($row);
+			} else {
+				return;
 			}
-			if ((pos_x + menu_width) > window_width){
-				pos_x = window_width - (menu_width + 10);
-			}
-			$("#contextmenu").css({
-				left: pos_x,
-				top: pos_y
-			});
-			app_vars.contextbox = true;
-			// Open window
-			$("#contextmenu").fadeIn("200");
+			// Calculate location of menu
+			set_rating($row.data().rating);
+			show_menu();
+			
             console.log("click 3");
 			event.preventDefault();
 		} else {
-			var in_chain = ($(event.target).parents('.item-row').length > 0);
 			if (event.which === 2 && in_chain){
+				item_selected($row);
 				console.log("in chain");
                 event.preventDefault();
 			} else {
@@ -249,9 +292,24 @@ $(document).on("ready",function(){
                 event.preventDefault();
             }
 			$("#contextmenu").fadeOut("200");
+			$("#playlist_list").slideUp();
+			app_vars.contextbox = false;
 		}
 	});
+	
+	$("#contextmenu li").on("click",function(e){
+		console.log($(e.target).closest("li"));
+		if ($(e.target).closest("li").data().id === 1){
+			if ($("#playlist_list").css("display") !== "none"){
+				$("#playlist_list").slideUp(300);
+			} else {
+				$("#playlist_list").slideDown(300);
+			}
+		}
+	});
+	// End ContextMenu Code
     
+    // Search code
     $("#item_filter").on("keyup",function(e){
         var query = $(this).val().toLowerCase();
         if (e.keyCode === 27){
@@ -271,6 +329,7 @@ $(document).on("ready",function(){
             $(".item-row").show();
         }
     });
+    // End Search code
     
     $("#_player").on("ended stalled",function(){
         next_item();
@@ -367,6 +426,11 @@ $(document).on("ready",function(){
 		console.log("trying to fetch data...");
 	});
 	
+	$("#notification_bar").on("mouseover",function(){
+		$("#notification_bar").animate({bottom:"-30px"},300,'swing');
+		app_vars.notification = false;
+	});
+	
 	// KeyBinding Code
 	$(document).keydown(function(event) {
 		var key = event.keyCode;
@@ -385,28 +449,25 @@ $(document).on("ready",function(){
 	// End KeyBinding Code
 	
 	// Rating Code
-	$(".item-row .fa-star-o, .item-row .fa-star").on("mouseover",function(){
+	$(".rating").on("mouseover",function(){
+		console.log("over");
+		var $element = $("#_media_"+app_vars.selected);
 		$(this).prevAll().addClass("fa-star").removeClass("fa-star-o");
 		$(this).addClass("fa-star").removeClass("fa-star-o");
 		$(this).nextAll().addClass("fa-star-o").removeClass("fa-star");
 	});
 	
-	$(".item-row .fa-star-o, .item-row .fa-star").on("mouseout",function(){
-		var rating = $(this).closest(".item-row").data().rating;
-		var $elements = $(this).parent().children();
-		console.log("Attempting to restore rating to "+rating+" stars");
-		if (rating == 0){
-			$elements.addClass("fa-star-o").removeClass("fa-star");
-		} else {
-			$element = $elements.eq(rating).addClass("fa-star-o").removeClass("fa-star");;
-			$element.prevAll().addClass("fa-star").removeClass("fa-star-o");
-			$element.nextAll().addClass("fa-star-o").removeClass("fa-star");
-		}
+	$(".rating").on("mouseout",function(){
+		console.log("... and out");
+		console.log("Attempting to restore rating");
+		rating = $("#_media_"+app_vars.selected).data().rating;
+		set_rating(rating);
 	});
 	
-	$(".item-row .fa-star-o, .item-row .fa-star").on("click",function(e){
-		console.log("rating click");
-		$(this).closest(".item-row").data().rating = ($(this).index() + 1);
+	$(".rating").on("click",function(e){
+		var $row = $("#_media_"+app_vars.selected);
+		$row.data().rating = ($(this).index() + 1);
+		item_selected($row);
 		e.stopPropagation();
 	});
 	// End Rating Code

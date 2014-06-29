@@ -1,4 +1,4 @@
-<div id="notification_bar" style="display:none;">
+<div id="notification_bar">
 	<marquee behavior="scroll" direction="left">NOW PLAYING: <span id="notification_text">Fire Inside - Gemini</span></marquee>
 </div>
 <div class="container-fluid <?=$skin?>" id="control_bar" style="width:100%">
@@ -49,13 +49,7 @@
                 <div class="row item-row <?=$skin?>" data-rating='<?=$file->Rating?>' data-id="<?=$id?>" id="_media_<?=$id?>">
                     <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
                     <div class="col-sm-11 col-md-9 item-title" title="<?=$file->SplFile->getFileName()?>"><span><?=$file->SplFile->getFileName()?></span></div>
-                    <div class="hidden-xs hidden-sm col-md-2">
-						<i class="fa fa-star<?=$file->Rating != 1 ? '-o' : ''?> rating"></i>
-						<i class="fa fa-star<?=$file->Rating != 2 ? '-o' : ''?> rating"></i>
-						<i class="fa fa-star<?=$file->Rating != 3 ? '-o' : ''?> rating"></i>
-						<i class="fa fa-star<?=$file->Rating != 4 ? '-o' : ''?> rating"></i>
-						<i class="fa fa-star<?=$file->Rating != 5 ? '-o' : ''?> rating"></i>
-                    </div>
+                    <div class="hidden-xs hidden-sm col-md-2"></div>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -66,11 +60,25 @@
     <source src='' type='audio/mpeg'>
 </audio>
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-    <li><a tabindex="-1" id="to_playlist">Add to Playlist &gt;</a></li>
-    <li><a tabindex="-1">Add to Queue</a></li>
-    <li><a tabindex="-1">Edit ID3 Tags</a></li>
-    <li><a tabindex="-1">Rate &gt;</a></li>
+    <li data-id='1'><a tabindex="-1" id="to_playlist">Add to Playlist &gt;</a></li>
+    <ul class='dropdown-menu' id='playlist_list'>
+		<li><a tabindex="-1" class="hidden-list-item">Work Playlist</a></li>
+		<li><a tabindex="-1" class="hidden-list-item">Home Playlist</a></li>
+		<li><a tabindex="-1" class="hidden-list-item">Workout Playlist</a></li>
+		<li class="divider"></li>
+    </ul>
+    <li data-id='2'><a tabindex="-1">Add to Queue</a></li>
+    <li data-id='3'><a tabindex="-1">Edit ID3 Tags</a></li>
+    <li data-id='4'><a tabindex="-1">Rate
+		<div id="rating_container" style='display:inline-block'>
+			<i class="fa fa-star<?=$file->Rating != 1 ? '-o' : ''?> rating"></i>
+			<i class="fa fa-star<?=$file->Rating != 2 ? '-o' : ''?> rating"></i>
+			<i class="fa fa-star<?=$file->Rating != 3 ? '-o' : ''?> rating"></i>
+			<i class="fa fa-star<?=$file->Rating != 4 ? '-o' : ''?> rating"></i>
+			<i class="fa fa-star<?=$file->Rating != 5 ? '-o' : ''?> rating"></i>
+		</div>
+    </a></li>
     <li class="divider"></li>
-    <li><a tabindex="-1">Delete from Library</a></li>
+    <li data-id='5'><a tabindex="-1">Delete from Library</a></li>
 </ul>
     
