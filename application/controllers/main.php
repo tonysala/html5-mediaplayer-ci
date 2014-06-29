@@ -20,7 +20,7 @@ class Main extends CI_Controller {
 			var_dump($this->itemlist->write_files_to_db());
 		}
 		$files = array();
-		$files = $this->itemlist->get_list_as_paths();
+		$files = $this->itemlist->get_object_list();
 		$data  = array("files"=>$files,"skin"=>$skin);
 		
 		$this->load->view("layout/header");

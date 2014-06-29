@@ -186,9 +186,6 @@ html, body {
 .sidebar-row:first-child {
 	border-top:0;
 }
-.sidebar-row:last-child {
-	border-bottom:1px solid #C3C8CA;
-}
 .sidebar-row {
 	padding:3px;
 	cursor:pointer;
@@ -196,7 +193,8 @@ html, body {
 	font-weight:800;
 	margin:0px 0;
 	background:#DCE8EC;
-	border-top:1px solid #C3C8CA;
+	border-top: 1px solid #F0F0F0;
+	border-bottom: 1px solid #C9D4D8;
 }
 #notification_bar {
 	position: absolute;

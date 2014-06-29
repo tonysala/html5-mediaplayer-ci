@@ -252,9 +252,12 @@ $(document).on("ready",function(){
 		}
 	});
     
-    $("#item_filter").on("keyup",function(){
+    $("#item_filter").on("keyup",function(e){
         var query = $(this).val().toLowerCase();
-        console.log("attempting search: "+query);
+        if (e.keyCode === 27){
+			$(this).blur();
+			return;
+		}
         if (query.length > 2){
             $(".item-row").each(function(){
                 $element = $(this);
@@ -264,27 +267,23 @@ $(document).on("ready",function(){
                     $element.show();
                 }
             });         
-
         } else {
             $(".item-row").show();
         }
     });
     
     $("#_player").on("ended stalled",function(){
-        console.log("track ended (or stalled).");
         next_item();
     });
     
     $("#volume_down, #volume_up").on("click",function(){
         var volume = player.volume + $(this).data().mod;
-        console.log("trying to set volume to: "+volume);
         if (!(volume > 1) && !(volume < 0)){
             player.volume = volume;
         }
     });
     
     $("#volume_off").on("click",function(){
-        console.log("setting volume to 0");
         player.volume = 0;
     });
     
@@ -313,9 +312,7 @@ $(document).on("ready",function(){
 	});
 	
 	elements.$control_prev.on("click dblclick",function(){
-		console.log("have you played enough of this song to count as a restart?");
 		if (player.currentTime > 3){
-			console.log("yep.");
 			if (app_vars.current === undefined){
 				load_item($("#_media_0"));
 			} else {
@@ -323,27 +320,21 @@ $(document).on("ready",function(){
 			}
 		} else {
 			if (app_vars.shuffle === false){
-                console.log("nope, and no shuffle, this'll be easy.");
                 var prev = app_vars.current - 1;
-                console.log("got next track: ID='"+app_vars.current+"' => ID='"+prev+"'");
                 if (prev >= 0){
                     $element = $("#_media_"+prev);
                 } else {
                     $element = $("#_media_"+(app_vars.items - 1));
                 }
-                console.log("playing ID: "+prev);
                 title = item_clicked($element);
             } else {
-				console.log("nope, but do you have history?");
 				if (app_vars.history.pointer > 0){
 					app_vars.history.pointer--;
-					console.log("yep! playing ID: "+app_vars.history.pointer);
 					item_clicked($("#_media_"+app_vars.history.items[app_vars.history.pointer]));
 				} else {
 					if (app_vars.history.pointer === 0 && app_vars.history.items.length > 0){
 						app_vars.history.items = [];
 					}
-					console.log("you have about as much as america -_- im gonna give you a random track.");
 					next_item();
 				}
 			}
@@ -351,10 +342,8 @@ $(document).on("ready",function(){
 	});
 	
 	elements.$control_playpause.on("click",function(){
-		console.log("deciding to play or pause...");
 		var $icon = $(this).find(".fa");
 		if (app_vars.status === 0){
-			console.log("we should play!");
 			$icon.removeClass("fa-play");
 			$icon.addClass("fa-pause");
 			if (app_vars.current !== undefined){
@@ -363,12 +352,10 @@ $(document).on("ready",function(){
 				next_item();
 			}
 		} else if (app_vars.current !== undefined) {
-			console.log("we should pause.");
 			$icon.removeClass("fa-pause");
 			$icon.addClass("fa-play");
 			pause_item($("#_media_"+app_vars.current));
 		} else {
-			console.error("Wat?!");
 		}
 	});
 	
@@ -380,19 +367,47 @@ $(document).on("ready",function(){
 		console.log("trying to fetch data...");
 	});
 	
+	// KeyBinding Code
 	$(document).keydown(function(event) {
-		// alert('stuff happened: ' + msg + " " + event.keyCode);
-		var keyChar = String.fromCharCode(event.keyCode).toLowerCase();
-		if (keyChar == "f" && event.ctrlKey) {
+		var key = event.keyCode;
+		if (key === 70 && event.ctrlKey) { // Ctrl + f
 			$element = $("#item_filter");
 			$element.scrollIntoView(300,'swing');
 			setTimeout(function(){
 				$element.focus();
 			},300);
-		} else if (keyChar == "u" && event.ctrlKey){
-			
+			event.preventDefault();
+		} else if (key === 85 && event.ctrlKey){ // Ctrl + u
+			event.preventDefault();
 		}
-		event.preventDefault();
+		console.log("KEY: "+key);
+	});
+	// End KeyBinding Code
+	
+	// Rating Code
+	$(".item-row .fa-star-o, .item-row .fa-star").on("mouseover",function(){
+		$(this).prevAll().addClass("fa-star").removeClass("fa-star-o");
+		$(this).addClass("fa-star").removeClass("fa-star-o");
+		$(this).nextAll().addClass("fa-star-o").removeClass("fa-star");
 	});
 	
+	$(".item-row .fa-star-o, .item-row .fa-star").on("mouseout",function(){
+		var rating = $(this).closest(".item-row").data().rating;
+		var $elements = $(this).parent().children();
+		console.log("Attempting to restore rating to "+rating+" stars");
+		if (rating == 0){
+			$elements.addClass("fa-star-o").removeClass("fa-star");
+		} else {
+			$element = $elements.eq(rating).addClass("fa-star-o").removeClass("fa-star");;
+			$element.prevAll().addClass("fa-star").removeClass("fa-star-o");
+			$element.nextAll().addClass("fa-star-o").removeClass("fa-star");
+		}
+	});
+	
+	$(".item-row .fa-star-o, .item-row .fa-star").on("click",function(e){
+		console.log("rating click");
+		$(this).closest(".item-row").data().rating = ($(this).index() + 1);
+		e.stopPropagation();
+	});
+	// End Rating Code
 });

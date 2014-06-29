@@ -112,6 +112,13 @@ class ItemList extends CI_Model {
 		return false;
 	}
 	
+	public function get_object_list(){
+		if (empty($this->_objects)){
+			$this->load_db_objects();
+		}
+		return $this->_objects;
+	}
+	
 	private function _valid_file($name){
 		if ($name !== "." && $name !== ".."){
 			$extension = substr($name,strrpos($name,"."));
