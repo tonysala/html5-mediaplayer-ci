@@ -19,7 +19,9 @@ $(document).on("ready",function(){
 		history        : {
 			items   : [], 
 			pointer : -1
-		}
+		},
+		last_api_call : undefined,
+		
 	}
 	
 	window.elements = {
@@ -47,6 +49,9 @@ $(document).on("ready",function(){
 		$row_status.removeClass("fa-play");
 		$row_status.addClass("fa-pause");
 		console.log("attempting resume");
+		var $playpause_button = elements.$control_playpause.find(".fa");
+		$playpause_button.removeClass("fa-play");
+		$playpause_button.addClass("fa-pause");
 		console.log("time (in ms) remaining: "+parseInt(player.duration - player.currentTime)*1000);
 		player.play();
 		$(player).on("play",function(){
@@ -63,6 +68,9 @@ $(document).on("ready",function(){
 		$row_status.removeClass("fa-pause");
 		$row_status.addClass("fa-play");
 		console.log("attempting pause");
+		var $playpause_button = elements.$control_playpause.find(".fa");
+		$playpause_button.removeClass("fa-pause");
+		$playpause_button.addClass("fa-play");
 		player.pause();
 		elements.$progress_bar.stop(true);
 		app_vars.status = 0;
@@ -84,7 +92,7 @@ $(document).on("ready",function(){
 		$row_status.removeClass("fa-play");
 		$row_status.addClass("fa-pause");
 		// --- Change control icon ---
-		var $playpause_button = $("#control_playpause").find(".fa");
+		var $playpause_button = elements.$control_playpause.find(".fa");
 		$playpause_button.removeClass("fa-play");
 		$playpause_button.addClass("fa-pause");
 		// Highlight the current row
@@ -164,6 +172,10 @@ $(document).on("ready",function(){
                         console.log("got next track: ID='"+app_vars.current+"' => ID='"+next+"'");
                         found = true;
                         $element = $("#_media_"+next);
+                        console.log("adding to history");
+						// Add to player history
+						app_vars.history.items.push(next);
+						app_vars.history.pointer++;
                         title = item_clicked($element);
                         $element.scrollIntoView();
                     }
@@ -260,10 +272,6 @@ $(document).on("ready",function(){
     
     $("#_player").on("ended stalled",function(){
         console.log("track ended (or stalled).");
-        console.log("adding to history");
-        // Add to player history
-		app_vars.history.items.push(item_id);
-		app_vars.history.pointer++;
         next_item();
     });
     
@@ -304,10 +312,10 @@ $(document).on("ready",function(){
         }
 	});
 	
-	elements.$control_prev.on("click",function(){
-		console.log("have you played enough of this song to get to the previous?");
-		if (player.currentTime < 2.5){
-			console.log("nope.");
+	elements.$control_prev.on("click dblclick",function(){
+		console.log("have you played enough of this song to count as a restart?");
+		if (player.currentTime > 3){
+			console.log("yep.");
 			if (app_vars.current === undefined){
 				load_item($("#_media_0"));
 			} else {
@@ -315,7 +323,7 @@ $(document).on("ready",function(){
 			}
 		} else {
 			if (app_vars.shuffle === false){
-                console.log("No shuffle, this'll be easy.");
+                console.log("nope, and no shuffle, this'll be easy.");
                 var prev = app_vars.current - 1;
                 console.log("got next track: ID='"+app_vars.current+"' => ID='"+prev+"'");
                 if (prev >= 0){
@@ -326,12 +334,15 @@ $(document).on("ready",function(){
                 console.log("playing ID: "+prev);
                 title = item_clicked($element);
             } else {
-				console.log("yep, but do you have history?");
+				console.log("nope, but do you have history?");
 				if (app_vars.history.pointer > 0){
 					app_vars.history.pointer--;
-					console.log("yep again! playing ID: "+app_vars.history.pointer);
-					load_item($("#_media_"+app_vars.history.items[app_vars.history.pointer]));
+					console.log("yep! playing ID: "+app_vars.history.pointer);
+					item_clicked($("#_media_"+app_vars.history.items[app_vars.history.pointer]));
 				} else {
+					if (app_vars.history.pointer === 0 && app_vars.history.items.length > 0){
+						app_vars.history.items = [];
+					}
 					console.log("you have about as much as america -_- im gonna give you a random track.");
 					next_item();
 				}
@@ -367,6 +378,21 @@ $(document).on("ready",function(){
 	
 	$(player).on("seeking",function(){
 		console.log("trying to fetch data...");
+	});
+	
+	$(document).keydown(function(event) {
+		// alert('stuff happened: ' + msg + " " + event.keyCode);
+		var keyChar = String.fromCharCode(event.keyCode).toLowerCase();
+		if (keyChar == "f" && event.ctrlKey) {
+			$element = $("#item_filter");
+			$element.scrollIntoView(300,'swing');
+			setTimeout(function(){
+				$element.focus();
+			},300);
+		} else if (keyChar == "u" && event.ctrlKey){
+			
+		}
+		event.preventDefault();
 	});
 	
 });
