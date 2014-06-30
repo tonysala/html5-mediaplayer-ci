@@ -1,5 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+class ItemListException extends Exception{};
+
 class ItemList extends CI_Model {
 
 	private $_paths = array();
@@ -7,7 +9,9 @@ class ItemList extends CI_Model {
 	private $_files = array();
 	private $_objects = array();
 	private $_extensions = array();
-	
+	public  $item_count = 0;
+	public  $new_items = 0;
+
 	public function initialise(){
 		$this->_paths = $this->config->item('watch_paths');
 		$this->_extensions = $this->config->item('allowed_exts');
@@ -18,13 +22,16 @@ class ItemList extends CI_Model {
 		if (is_array($paths)){
 			$this->_paths = $paths;
 		} else {
-			throw new Exception("set_watch_paths() expects 1 parameter of type array, ".gettype($paths)." given");
+			throw new ItemListException("set_watch_paths() expects 1 parameter of type array, ".gettype($paths)." given");
 		}
 	}
 	
 	public function generate_files_list($paths = null, $append = true){
 		if ($paths === null) {
 			$paths = $this->_paths;
+		}
+		if (empty($this->_objects)){
+			$this->load_db_objects();
 		}
 		if (!$append){
 			$this->_files[] = array();
@@ -40,7 +47,8 @@ class ItemList extends CI_Model {
 			}
 			unset ($objects, $extension);
 		}
-		return $this->files;
+		$this->new_items = $this->item_count - $this->_db_count;
+		return $this->_files;
 	}
 	
 	public function get_list_as_links(){
@@ -62,13 +70,19 @@ class ItemList extends CI_Model {
 	}
 	
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT * FROM music;');
+		$items = $this->db->query('SELECT * FROM music');
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();
 		if (is_array($results)){
-			array_walk($results, function(&$object){
-				$object = new MediaObject($object);
-			});
+			foreach($results as $k => &$result){
+				try {
+					$result = new MediaObject($result);
+				} catch (MediaObjectException $e){
+					unset($results[$k]);
+				}
+			};
+			array_values($results);
+			$this->_db_count = count($results);
 			$this->_objects = $results;
 			return true;
 		} else {
@@ -76,27 +90,27 @@ class ItemList extends CI_Model {
 		}
 	}
 	
-	public function write_files_to_db($objects = null){
-		if ($objects === null) {
+	public function write_files_to_db($files = null){
+		if ($files === null) {
 			if (empty($this->_files)){
 				$this->generate_files_list();
 			}
-			$objects = $this->_files;
+			$files = $this->_files;
 		}
-		$result = array_map(function($object){
-			$realpath = $object->getRealPath();
+		$result = 0;
+		foreach ($files as $file){
+			$realpath = $file->getRealPath();
 			$md5 = md5_file($realpath);
 			$db_md5 = $this->db->query("SELECT ID FROM `music` WHERE `FileMD5` = '".$md5."';");
-			$file = $this->db->escape($realpath);
+			$filename = $this->db->escape($realpath);
 			if ($db_md5->num_rows() === 0){
-				$this->db->query("INSERT INTO music SET FileMD5 = '".$md5."', Filename = ".$file.";");
-				return 1;
+				$this->db->query("INSERT INTO music SET FileMD5 = '".$md5."', Filename = ".$filename.";");
+				$result = $result + 1;
 			} else {
-				$this->db->query("UPDATE music SET Filename=".$file." WHERE FileMD5='".$md5."';");
-				return 0;
+				$this->db->query("UPDATE music SET Filename=".$filename." WHERE FileMD5='".$md5."';");
 			}
-		},$objects);
-		return (int)array_sum($result);
+		}
+		return $result;
 	}
 	
 	public function get_fullpath($title){

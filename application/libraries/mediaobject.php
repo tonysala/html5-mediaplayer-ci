@@ -1,5 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+class MediaObjectException extends Exception{}
+
 class MediaObject {
 
 	public $ID = null;
@@ -25,10 +27,15 @@ class MediaObject {
 	            $this->$key = $value;
 			}
         }
-        if ($this->Filename !== null){
-			$this->SplFile = new SplFileObject($this->Filename);
+        if ($this->Filename !== null && file_exists($this->Filename)){
+			try {
+				$this->SplFile = new SplFileObject($this->Filename);
+			} catch (RuntimeException $e){
+				throw new MediaObjectException("Could not create SplFileObject property on MediaObject instance.");
+			}
+		} else {
+			throw new MediaObjectException("Could not create SplFileObject property on MediaObject instance, file not found.");
 		}
-    }  
-	
+	}
 	
 }

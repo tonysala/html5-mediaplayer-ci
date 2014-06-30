@@ -28,14 +28,24 @@ class Xhr extends CI_Controller {
 	}
 	
 	public function update_db(){
-		if ($watch = $this->input->get("watch[]")){
-			
+		if ($watch = $this->input->get("watch")){
+			$this->itemlist->generate_files_list((array)($watch));
+			$this->itemlist->write_files_to_db();
+			return json_encode(
+				array(
+					"error" => false,
+					"found" => $this->itemlist->item_count,
+					"new"   => $this->itemlist->new_items
+				)
+			);
+		} else {
+			return json_encode(
+				array(
+					"error" => true,
+					"found" => 0,
+					"new"   => 0
+				)
+			);
 		}
-		return json_encode(
-			array(
-				"found" => count($this->generate_files_list($watch)),
-				"new"   => 0
-			)
-		);
 	}
 }
