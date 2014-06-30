@@ -8,11 +8,11 @@ class Xhr extends CI_Controller {
 	public function __construct(){
 		parent::__construct();
 		$this->itemlist->initialise();
-		//$this->itemlist->load_db_objects('music');
 	}
 	
 	public function index(){
 		header("HTTP/1.1 401 Unauthorized");
+		exit;
 	}
 	
 	public function get_url(){
@@ -31,7 +31,7 @@ class Xhr extends CI_Controller {
 		if ($watch = $this->input->get("watch")){
 			$this->itemlist->generate_files_list((array)($watch));
 			$this->itemlist->write_files_to_db();
-			return json_encode(
+			print json_encode(
 				array(
 					"error" => false,
 					"found" => $this->itemlist->item_count,
@@ -39,13 +39,29 @@ class Xhr extends CI_Controller {
 				)
 			);
 		} else {
-			return json_encode(
+			print json_encode(
 				array(
 					"error" => true,
 					"found" => 0,
 					"new"   => 0
 				)
 			);
+		}
+	}
+	
+	public function set_rating(){
+		if ($id = $this->input->get("id") && $rating = $this->input->get("rating")){
+			$rating = $this->db->escape($rating);
+			$id     = $this->db->escape($id);
+			$result = $this->db->query("UPDATE music SET Rating = ".$rating." WHERE ID = ".$id.";");
+			var_dump("UPDATE music SET Rating = ".$rating." WHERE ID = ".$id.";");
+			if ($result === true){
+				print json_encode(array("error"=>false));
+			} else {
+				print json_encode(array("error"=>true));
+			}
+		} else {
+			print json_encode(array("error"=>true));
 		}
 	}
 }

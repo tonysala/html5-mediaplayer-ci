@@ -45,10 +45,12 @@
                 </div>
 			</div>
 			<div class="items-container">
-                <?php foreach($files as $id => $file): ?>
-                <div class="row item-row <?=$skin?>" data-rating='<?=$file->Rating?>' data-id="<?=$id?>" id="_media_<?=$id?>">
+                <?php foreach($files as $k => $file): ?>
+                <div class='row item-row <?=$skin?>' data-rating='<?=$file->Rating?>' data-id='<?=$file->ID?>' id='_media_<?=$k?>'>
                     <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
-                    <div class="col-sm-11 col-md-9 item-title" title="<?=$file->SplFile->getFileName()?>"><span><?=$file->SplFile->getFileName()?></span></div>
+                    <div class="col-sm-11 col-md-9 item-title" title="<?=$file->SplFile->getFileName()?>">
+						<span><?=$file->SplFile->getFileName()?></span>
+					</div>
                     <div class="hidden-xs hidden-sm col-md-2"></div>
                 </div>
                 <?php endforeach; ?>

@@ -1,7 +1,5 @@
 $(document).on("ready",function(){
 	
-    console.log("player loaded");
-    
     // Define default settings
 	window.app_vars = {
 		
@@ -21,8 +19,12 @@ $(document).on("ready",function(){
 			pointer : -1
 		},
 		last_api_call : undefined,
-		notification  : false
+		notification  : false,
+		forwardrate   : 15,
+		fastforward   : false,
 	}
+	
+	
 	
 	window.elements = {
 		$progress_bar      : $("#progress_bar"),
@@ -35,12 +37,21 @@ $(document).on("ready",function(){
     window.player = document.getElementById("_player");
       
     // Do setup stuff
-    console.log($("#playlist_list"));
     $("#playlist_list").slideUp();
+    
+    // Add a way of getting the index of the item
+    $.fn.getIndex = function(){
+		if ($(this).hasClass("item-row")){
+			var id = $(this).prop('id');
+			return id.substring(id.lastIndexOf("_") + 1);
+		} else {
+			return undefined;
+		}
+	}
         
     // Function Definitions
     var item_selected = function($ele){
-		app_vars.selected = $ele.data().id;
+		app_vars.selected = $ele.getIndex();
         $(".item-row").removeClass("selected-row");
 		if (!$ele.hasClass("selected-row")){
 			$ele.addClass("selected-row");
@@ -52,11 +63,9 @@ $(document).on("ready",function(){
 		var $row_status = $ele.find(".row-status");
 		$row_status.removeClass("fa-play");
 		$row_status.addClass("fa-pause");
-		console.log("attempting resume");
 		var $playpause_button = elements.$control_playpause.find(".fa");
 		$playpause_button.removeClass("fa-play");
 		$playpause_button.addClass("fa-pause");
-		console.log("time (in ms) remaining: "+parseInt(player.duration - player.currentTime)*1000);
 		player.play();
 		$(player).on("play",function(){
 			elements.$progress_bar.animate(
@@ -71,7 +80,6 @@ $(document).on("ready",function(){
 		var $row_status = $ele.find(".row-status");
 		$row_status.removeClass("fa-pause");
 		$row_status.addClass("fa-play");
-		console.log("attempting pause");
 		var $playpause_button = elements.$control_playpause.find(".fa");
 		$playpause_button.removeClass("fa-pause");
 		$playpause_button.addClass("fa-play");
@@ -81,7 +89,8 @@ $(document).on("ready",function(){
 	}
 	
 	var load_item = function($ele){
-		var item_id = $ele.data().id;
+		console.log($ele);
+		var item_id = $ele.getIndex();
 		var item_title = $ele.find(".item-title span").text();
 		var $row_status = $ele.find(".row-status");
 		$("#current_track").html("Playing: <b>"+item_title+"</b>");
@@ -105,7 +114,6 @@ $(document).on("ready",function(){
 		if (!$ele.hasClass("selected-row")){
 			$ele.addClass("selected-row");
 		}
-		console.log("asking server for url...");
 		$.ajax({
 			url  : "/xhr/get_url",
 			data : {
@@ -114,14 +122,11 @@ $(document).on("ready",function(){
 				},
 			type: 'get'
 		}).done(function(file){
-			console.log("got url from server: "+file);
 			$("#_player > source").prop({
 			"src":file,
 			"type":"audio/mpeg"});
-			console.log("loading file...");
 			player.load();
 			$(player).on("play",function(){
-				console.log("animation duration = "+((player.duration)*1000));
 				elements.$progress_bar.animate({
 					width: "100%"},parseInt(player.duration)*1000,"linear");
 			});
@@ -134,10 +139,11 @@ $(document).on("ready",function(){
     var item_clicked = function($ele){
 		var item_title = $ele.find(".item-title span").text();
 		var item_id = $ele.data().id;
-		app_vars.selected = item_id;
-        if (app_vars.current === item_id && app_vars.status === 1){
+		var item_index = $ele.getIndex();
+		app_vars.selected = item_index;
+        if (app_vars.current === item_index && app_vars.status === 1){
             pause_item($ele);
-        } else if (app_vars.current === item_id){
+        } else if (app_vars.current === item_index){
 			resume_item($ele);
         } else {
 			load_item($ele);
@@ -147,36 +153,36 @@ $(document).on("ready",function(){
     };
     
     var next_item = function(){
+		console.log("next item");
 		app_vars.status = 0;
         var title = undefined;
         if (app_vars.loop === true){
-            console.log("looping...");
             app_vars.status = 1;
             player.load();
         } else {
+			console.log("not looping, current: "+app_vars.current);
 			if (app_vars.current === undefined){
 				app_vars.current = -1;
 			}
             if (app_vars.shuffle === false){
+                console.log("not shuffling..");
                 var next = app_vars.current + 1;
-                console.log("got next track: ID='"+app_vars.current+"' => ID='"+next+"'");
                 if ($("#_media_"+next).length){
                     $element = $("#_media_"+next);
                 } else {
                     $element = $("#_media_0");
                 }
+                
                 title = item_clicked($element);
                 $element.scrollIntoView();
             } else {
+				console.log("shuffling..");
                 var found = false;
-                console.log("generating next shuffle track...");
                 while(found === false){
                     var next = Math.floor(Math.random() * (app_vars.items - 0 + 1)) + 0;
                     if (next !== app_vars.current){
-                        console.log("got next track: ID='"+app_vars.current+"' => ID='"+next+"'");
                         found = true;
                         $element = $("#_media_"+next);
-                        console.log("adding to history");
 						// Add to player history
 						app_vars.history.items.push(next);
 						app_vars.history.pointer++;
@@ -234,9 +240,7 @@ $(document).on("ready",function(){
 	}
 
 	var set_rating = function(rating){
-		console.log("setting rating to "+rating);
 		var $elements = $("#rating_container").children();
-		console.log($elements);
 		if (rating == 0){
 			$elements.addClass("fa-star-o").removeClass("fa-star");
 		} else {
@@ -245,30 +249,34 @@ $(document).on("ready",function(){
 			$element.nextAll().addClass("fa-star-o").removeClass("fa-star");
 		}
 	}
+    
+    var set_rate = function(rate){
+		player.playbackRate = rate;
+		elements.$progress_bar.stop(true).animate(
+			{ width: "100%" }, (parseInt(player.duration - player.currentTime) * 1000) / rate,"linear"
+		);
+	}
     // End of functions
     
     // Event Handlers
 	$(".item-row").on("click",function(){
-		console.log("single click triggered");
         item_selected($(this));
         item_clicked($(this));
 	});
 	
 	// ContextMenu Code
 	$(".items-container , #contextmenu").on("contextmenu",function(){
-		console.log("prevent system contextmenu");
         return false;
 	});
 	
 	$(".items-container").on("mousedown",function(event){
 		var in_chain = ($(event.target).parents('.item-row').length > 0);
 		var $row = $(event.target).closest(".item-row");
-		console.log($row);
-		console.log($row.data().id)
 		if (event.which === 3){	
 			// If menu is already visible hide it and return
 			if ($("#contextmenu").css("display") !== "none"){
 				hide_menu();
+				return;
 			}
 			// Check if right clicked over an item, and select it else return
 			if (in_chain){
@@ -279,16 +287,12 @@ $(document).on("ready",function(){
 			// Calculate location of menu
 			set_rating($row.data().rating);
 			show_menu();
-			
-            console.log("click 3");
 			event.preventDefault();
 		} else {
 			if (event.which === 2 && in_chain){
 				item_selected($row);
-				console.log("in chain");
                 event.preventDefault();
 			} else {
-                console.log("not in chain");
                 event.preventDefault();
             }
 			$("#contextmenu").fadeOut("200");
@@ -298,7 +302,6 @@ $(document).on("ready",function(){
 	});
 	
 	$("#contextmenu li").on("click",function(e){
-		console.log($(e.target).closest("li"));
 		if ($(e.target).closest("li").data().id === 1){
 			if ($("#playlist_list").css("display") !== "none"){
 				$("#playlist_list").slideUp(300);
@@ -338,12 +341,17 @@ $(document).on("ready",function(){
     $("#volume_down, #volume_up").on("click",function(){
         var volume = player.volume + $(this).data().mod;
         if (!(volume > 1) && !(volume < 0)){
+            player.muted = false;
             player.volume = volume;
         }
     });
     
     $("#volume_off").on("click",function(){
-        player.volume = 0;
+        if (player.muted === true){
+			player.muted = false;
+		} else {
+			player.muted = true;
+		};
     });
     
 	$("#shuffle").on("click",function(){
@@ -418,8 +426,25 @@ $(document).on("ready",function(){
 		}
 	});
 	
-	elements.$control_next.on("click",function(){
-		next_item();
+	elements.$control_next.on("mousedown",function(){
+		if (app_vars.status === 1){
+			fastforward_time_id = setTimeout(function(){
+				app_vars.fastforward = true;
+				set_rate(app_vars.forwardrate);
+			},200);
+		}
+	});
+	
+	elements.$control_next.on("mouseup",function(e){
+		set_rate(1);
+		if (app_vars.status === 1){
+			clearTimeout(fastforward_time_id);
+		}
+		if (app_vars.fastforward === true){
+			app_vars.fastforward = false;
+		} else {
+			next_item();
+		}
 	});
 	
 	$(player).on("seeking",function(){
@@ -450,7 +475,6 @@ $(document).on("ready",function(){
 	
 	// Rating Code
 	$(".rating").on("mouseover",function(){
-		console.log("over");
 		var $element = $("#_media_"+app_vars.selected);
 		$(this).prevAll().addClass("fa-star").removeClass("fa-star-o");
 		$(this).addClass("fa-star").removeClass("fa-star-o");
@@ -458,15 +482,28 @@ $(document).on("ready",function(){
 	});
 	
 	$(".rating").on("mouseout",function(){
-		console.log("... and out");
-		console.log("Attempting to restore rating");
 		rating = $("#_media_"+app_vars.selected).data().rating;
 		set_rating(rating);
 	});
 	
 	$(".rating").on("click",function(e){
-		var $row = $("#_media_"+app_vars.selected);
-		$row.data().rating = ($(this).index() + 1);
+		var $row   = $("#_media_"+app_vars.selected);
+		var rating = parseInt($(this).index() + 1);
+		var id     = $row.data().id;
+		$row.data().rating = rating;
+		$.ajax({
+			url : "/xhr/set_rating",
+			data: {
+				rating: rating,
+				id: id
+			},
+			dataType: "json",
+			type: "get"
+		}).done(function(response){
+			console.log(response);
+		}).fail(function(response){
+			console.log(response);
+		});
 		item_selected($row);
 		e.stopPropagation();
 	});
