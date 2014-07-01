@@ -28,6 +28,7 @@
         </div>
     </div>
 </div>
+<!-- Spinning fa icon! <i class="fa fa-circle-o-notch fa-spin"></i> -->
 <div class="container-fluid page-wrapper">
 	<div class="row">
 		<div class="col-md-3 hidden-sm hidden-xs sidebar <?=$skin?>">

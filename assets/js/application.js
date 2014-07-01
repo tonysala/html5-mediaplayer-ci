@@ -22,6 +22,7 @@ $(document).on("ready",function(){
 		notification  : false,
 		forwardrate   : 15,
 		fastforward   : false,
+		notification_duration: 12000
 	}
 	
 	
@@ -203,12 +204,12 @@ $(document).on("ready",function(){
 				window.timeout_id = setTimeout(function(){
 					$bar.animate({bottom:"-30px"},300,'swing');
 					app_vars.notification = false;
-				},12000);
+				},app_vars.notification_duration);
 			}
 			
         }
 	}
-
+		
 	var hide_menu = function(){
 		$("#contextmenu").hide();
 		$("#playlist_list").slideUp();

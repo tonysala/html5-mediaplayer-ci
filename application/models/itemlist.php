@@ -80,6 +80,11 @@ class ItemList extends CI_Model {
 				} catch (MediaObjectException $e){
 					unset($results[$k]);
 				}
+				//print "<script>console.log('".$k." / ".count($results)." | ".$result->tags['title'][0]." - ".$result->tags['artist'][0]." (".$result->tags['year'][0].")');</script>"; 
+				//flush();
+				//ob_flush();
+				//ob_end_flush();
+				//ob_start();
 			};
 			array_values($results);
 			$this->_db_count = count($results);
