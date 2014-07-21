@@ -51,6 +51,16 @@ class ItemList extends CI_Model {
 		return $this->_files;
 	}
 	
+	public function get_id3_tags($file){
+		$id3_info = new getID3();
+		$id3_info->analyze($file->getRealPath());
+		$tags = array();
+		if (!empty($id3_info->info['tags'])){
+			$tags = array_pop($id3_info->info['tags']);
+		}
+		return $tags;
+	}
+	
 	public function get_list_as_links(){
 		if (empty($this->_objects)){
 			$this->load_db_objects();
@@ -67,6 +77,18 @@ class ItemList extends CI_Model {
 		return array_map(function($object){
 			return substr($object->SplFile->getRealPath(),strrpos($object->SplFile->getRealPath(),"/")+1);
 		},$this->_objects);
+	}
+	
+	public function get_item($id){
+		$result = $this->db->query("SELECT * FROM `music` WHERE `ID` = ".$this->db->escape($id)." LIMIT 1;");
+		try {
+			$result = new MediaObject($result->first_row());
+		} catch (MediaObjectException $e){
+			// Error Handling
+			return;
+		}
+		
+		return $result;
 	}
 	
 	public function load_db_objects(){
@@ -102,20 +124,70 @@ class ItemList extends CI_Model {
 			}
 			$files = $this->_files;
 		}
-		$result = 0;
+		$result = $count = 0;
 		foreach ($files as $file){
 			$realpath = $file->getRealPath();
+			$tags = $this->get_id3_tags($file);
+			$sql = array();
+			//if (array_key_exists(0,$tags)){
+				//$tags = $tags[0];
+			//}
+			//print "<pre>";
+			//print_r($tags);
+			//print "</pre>";
+			if (isset($tags['artist'][0])){
+				$artist = $this->check_foreign($tags['artist'][0],'ArtistName','artists');
+				$sql[] = " ArtistID = ".$artist." ";
+			}
+			if (isset($tags['album'][0])){
+				$album = $this->check_foreign($tags['album'][0],'AlbumName','albums');
+				$sql[] = " AlbumID = ".$album." ";
+			}
+			if (isset($tags['genre'][0])){
+				$genre = $this->check_foreign($tags['genre'][0],'GenreName','genres');
+				$sql[] = " GenreID = ".$genre." ";
+			}
+			if (isset($tags['title'][0])){
+				$sql[] = " TrackName = ".$this->db->escape($tags['title'][0])." ";
+			}
+			if (isset($tags['year'][0])){
+				$sql[] = " Year = ".$this->db->escape($tags['year'][0])." ";
+			}
+			$sql = (count($sql) > 0 ? ", " : "").implode(" , ",$sql);
 			$md5 = md5_file($realpath);
 			$db_md5 = $this->db->query("SELECT ID FROM `music` WHERE `FileMD5` = '".$md5."';");
 			$filename = $this->db->escape($realpath);
+			$count = $count + 1;
 			if ($db_md5->num_rows() === 0){
-				$this->db->query("INSERT INTO music SET FileMD5 = '".$md5."', Filename = ".$filename.";");
+				$this->db->query("INSERT INTO music SET "
+					. "FileMD5 = '".$md5."', "
+					. "Filename = ".$filename
+					. $sql
+				);
 				$result = $result + 1;
 			} else {
-				$this->db->query("UPDATE music SET Filename=".$filename." WHERE FileMD5='".$md5."';");
+				$this->db->query("UPDATE music SET "
+					. "Filename=".$filename
+					. $sql
+					. " WHERE FileMD5='".$md5."';");
 			}
+			print "<script>console.log('Writing: ".$count."/479 New: ".$result."')</script>";
+			flush();
+			ob_flush();
 		}
 		return $result;
+	}
+	
+	public function check_foreign($value, $foreign_col, $table){
+		$value = $this->db->escape($value);
+		$result = $this->db->query("SELECT ID FROM `".$table."` WHERE ".$foreign_col." = ".$value);
+		print "<script>console.log(".json_encode($result).")</script>";
+		if ($result->num_rows() !== 0){
+			return $result->first_row()->ID;
+		} else {
+			$this->db->query("INSERT INTO `".$table."` SET ".$foreign_col." = ".$value);
+			return $this->db->insert_id();
+		}
 	}
 	
 	public function get_fullpath($title){

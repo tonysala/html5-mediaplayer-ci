@@ -16,7 +16,7 @@ if (!defined('GETID3_OS_ISWINDOWS')) {
 }
 // Get base path of getID3() - ONCE
 if (!defined('GETID3_INCLUDEPATH')) {
-	define('GETID3_INCLUDEPATH', dirname(__FILE__).DIRECTORY_SEPARATOR);
+	define('GETID3_INCLUDEPATH', dirname(__FILE__).DIRECTORY_SEPARATOR.'getid3'.DIRECTORY_SEPARATOR);
 }
 // Workaround Bug #39923 (https://bugs.php.net/bug.php?id=39923)
 if (!defined('IMG_JPG') && defined('IMAGETYPE_JPEG')) {
@@ -68,7 +68,7 @@ unset($open_basedir, $temp_dir);
 
 // End: Defines
 
-if (!class_exists(getID3)){
+if (!class_exists('getID3')){
 	class getID3
 	{
 		// public: Settings
@@ -1797,7 +1797,7 @@ if (!class_exists(getID3)){
 	}
 }
 
-if (!class_exists(getid3_exception)){
+if (!class_exists('getid3_exception')){
 	class getid3_exception extends Exception
 	{
 		public $message;

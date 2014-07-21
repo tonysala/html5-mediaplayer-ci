@@ -16,7 +16,7 @@ class Main extends CI_Controller {
 		
 		$skin = $this->config->item('skin');
 		
-		// Temporary
+		// Update DB (Scan for new files)
 		if (false){
 			$this->itemlist->generate_files_list();
 			$this->itemlist->write_files_to_db();
