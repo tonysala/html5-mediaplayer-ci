@@ -4,7 +4,7 @@
 <div class="container-fluid <?=$skin?>" id="control_bar" style="width:100%">
     <div class="row">
         <div class="col-sm-2 hidden-xs">
-            <span id="app_title">Note&trade; PRE-ALPHA v0.02 &nbsp;&nbsp;</span>
+            <span id="app_title">Note</span>
         </div>
         <div class="col-sm-8 col-sm-offset-2 col-xs-12 controls-container">
 			<div class="btn-group toolbar_buttons">
@@ -46,10 +46,11 @@
 				<div class="sidebar-row">SETTINGS</div>
 			</div>
 			<div id="cover_art_container">
-				<img id="cover_art_image" src="">
+				<img id="cover_art_image" src="assets/images/album-placeholder.png">
 			</div>
 		</div>
 		<div class="col-md-10 col-sm-9 content <?=$skin?>">
+			<?php if (count($files)): ?>
 			<div class="row header-row <?=$skin?>">
 				<div class="col-sm-10 col-md-6 current-track-container"><span id="current_track">Playing: </span></div>
 				<div class="col-md-4">
@@ -67,6 +68,9 @@
                 </div>
                 <?php endforeach; ?>
             </div>
+            <?php else: ?>
+				<h1>No music found :(</h1>
+            <?php endif; ?>
 		</div>
 	</div>
 </div>

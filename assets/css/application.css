@@ -310,19 +310,25 @@ html, body {
 #cover_art_container {
 	width:100%;
 	position:absolute;
+	text-align:center;
 	bottom:-2px;
 	overflow:hidden;
+	background: #444;
+	box-shadow: inset 0px 0px 15px 0px #222;
 }
 img#cover_art_image {
 	overflow:hidden;
-	margin:0 -1% 0 -1%;
-	width:102%;
-	-webkit-filter: blur(1px);
-	transition-property: -webkit-filter;
-	transition-duration: 0.2s;
+	margin: 5% auto;
+	width: 60%;
+	opacity:0.9;
+	transition-property: opacity;
+	transition-duration: 0.1s;
+	border: 1px solid rgba(0,0,0,.2);
+	box-shadow: 0px 0px 0px 1px #fff, 1px 1px 8px 0px black;
+	border-radius: 3px;
 }
 img#cover_art_image:hover {
-	-webkit-filter: blur(0.1px);
+	opacity:1;
 }
 .controls-container {
 	overflow:hidden;
