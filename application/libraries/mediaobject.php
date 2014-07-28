@@ -8,6 +8,7 @@ class MediaObject {
 
 	public $ID = null;
 	public $Filename = null;
+	public $Filepath = null;
 	public $Trackname = null;
 	public $ArtistID = null;
 	public $AlbumID = null;
@@ -37,19 +38,12 @@ class MediaObject {
 			try {
 				$this->SplFile = new SplFileInfo($this->Filename);
 				$this->id3_info = new getID3();
-				//$this->id3_info->analyze($this->Filename);
-				//if (!empty($this->id3_info->info['tags'])){
-					//$this->tags = array_pop($this->id3_info->info['tags']);
-				//}
 			} catch (RuntimeException $e){
 				throw new MediaObjectException("Could not create SplFileObject property on MediaObject instance.");
 			}
 		} else {
 			throw new MediaObjectException("Could not create SplFileObject property on MediaObject instance, file not found.");
 		}
-		//print "<pre>";
-		//var_dump($this->id3_info);
-		//print "</pre>";
 	}
 	
 	public function get_foreign($id, $foreign_col, $table){
@@ -57,7 +51,9 @@ class MediaObject {
 		// Cant escape table name using codeigniter function
 		$result = $this->CI->db->query("SELECT ".$foreign_col." FROM `".$table."` WHERE ID = ".$id.";");
 		$value = $result->first_row();
-		return $value->$foreign_col;
+		if (is_object($value)){
+			return $value->$foreign_col;
+		} else return "Unknown";
 	} 
 	
 	public function __get($property){

@@ -17,19 +17,11 @@ class Xhr extends CI_Controller {
 	
 	public function get_url(){
 		$id = $this->input->get("id");
-		$title = $this->input->get("title");
 		
-		$path = $this->itemlist->get_fullpath($title);
+		$path = $this->itemlist->get_fullpath($id);
 		if ($path === false){
 			header("HTTP/1.1 404 Content Not Found");
 		} else {
-			// messes up on json decode at the client side
-			//print json_encode(
-				//array(
-					//"path" => $path,
-					//"error" => false
-				//)
-			//);
 			print $path;
 		}
 	}
@@ -70,11 +62,29 @@ class Xhr extends CI_Controller {
 	}
 	
 	public function set_rating(){
-		if ($id = $this->input->get("id") && $rating = $this->input->get("rating")){
-			$rating = $this->db->escape($rating);
-			$id     = $this->db->escape($id);
-			$result = $this->db->query("UPDATE music SET Rating = ".$rating." WHERE ID = ".$id.";");
-			var_dump("UPDATE music SET Rating = ".$rating." WHERE ID = ".$id.";");
+		if (($ids = $this->input->get("ids")) && ($rating = $this->input->get("rating"))){
+			$ids = json_decode($ids);
+			$rating = $this->db->escape(json_decode($rating));
+			foreach ($ids as &$id){
+				$id = $this->db->escape($id);
+			}
+			$ids = implode(",",$ids);
+			print json_encode(array("ids"=>"UPDATE music SET Rating = ".$rating." WHERE ID IN (".$ids.");"));
+			exit;
+			$result = $this->db->query("UPDATE music SET Rating = ".$rating." WHERE ID IN (".$ids.");");
+			if ($result === true){
+				print json_encode(array("error"=>false));
+			} else {
+				print json_encode(array("error"=>true));
+			}
+		} else {
+			print json_encode(array("error"=>true));
+		}
+	}
+	
+	public function played(){
+		if ($id = $this->input->get("id")){
+			$result = $this->db->query("UPDATE music SET Plays = Plays + 1 WHERE ID = ".$id.";");
 			if ($result === true){
 				print json_encode(array("error"=>false));
 			} else {

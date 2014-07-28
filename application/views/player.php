@@ -1,6 +1,3 @@
-<div id="notification_bar">
-	<marquee behavior="scroll" direction="left">NOW PLAYING: <span id="notification_text">Fire Inside - Gemini</span></marquee>
-</div>
 <div class="container-fluid <?=$skin?>" id="control_bar" style="width:100%">
     <div class="row">
         <div class="col-sm-2 hidden-xs">
@@ -39,35 +36,75 @@
 <!-- Spinning fa icon! <i class="fa fa-circle-o-notch fa-spin"></i> -->
 <div class="container-fluid page-wrapper">
 	<div class="row">
-		<div class="col-md-2 col-sm-3 hidden-xs sidebar <?=$skin?>">
+		<div class="hidden-xs sidebar <?=$skin?>">
             <div id="sidebar_list">
-				<div class="sidebar-row">PLAYLIST 1</div>
-				<div class="sidebar-row">LIBRARY</div>
-				<div class="sidebar-row">SETTINGS</div>
+				<div class="sidebar-row queue">
+					<span style='text-align:left'>PLAY QUEUE</span>
+					<span style='text-align:right;' class='queue-item-count'></span>
+				</div>
+				<div class="sidebar-row playlist" data-playlistname='work'>
+					<span style='text-align:left'>WORK PLAYLIST</span>
+					<span style='text-align:right;' class='playlist-item-count'></span>
+				</div>
+				<div class="sidebar-row" id='library'>
+					<span>LIBRARY</span>
+					<span style='text-align:right;' class='playlist-item-count'>(<?=count($files)?>)</span>
+				</div>
+				<div class="sidebar-row">
+					<span>SETTINGS</span>
+				</div>
 			</div>
 			<div id="cover_art_container">
 				<img id="cover_art_image" src="assets/images/album-placeholder.png">
+				<div id="cover_art_actions_container">
+				
+				</div>
 			</div>
 		</div>
-		<div class="col-md-10 col-sm-9 content <?=$skin?>">
+		<div class="col-md-12 content <?=$skin?>">
 			<?php if (count($files)): ?>
 			<div class="row header-row <?=$skin?>">
-				<div class="col-sm-10 col-md-6 current-track-container"><span id="current_track">Playing: </span></div>
-				<div class="col-md-4">
-                    <input type="text" id="item_filter" class="form-control <?=$skin?>" placeholder="Search tracks...">
+				<div class="col-sm-8 col-md-7 current-track-container"><span id="current_track">Playing: </span></div>
+				<div class="col-sm-4 col-md-5 hidden-xs">
+					<div class="input-group">
+						<div class="input-group-btn sort_search">
+							<button type="button" id="sort_by" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by 
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu" id="sort_menu" role="menu">
+							    <li><a href="#">Track</a></li>
+								<li><a href="#">Artist</a></li>
+								<li><a href="#">Album</a></li>
+							</ul>
+							<button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-sort-alpha-asc"></i></button>
+						</div>
+						<input type="text" id="item_filter" class="form-control <?=$skin?>" placeholder="Search tracks...">
+					</div>
                 </div>
 			</div>
-			<div class="items-container">
-                <?php foreach($files as $k => $file): ?>
-                <div class='row item-row <?=$skin?>' data-rating='<?=$file->Rating?>' data-id='<?=$file->ID?>' id='_media_<?=$file->ID?>'>
-                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
-                    <div class="col-sm-11 col-md-9 item-title" title="<?=$file->SplFile->getFileName()?>">
-						<span><?=$file->SplFile->getFileName()?></span>
-					</div>
-                    <div class="hidden-xs hidden-sm col-md-2"></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
+			<div id="library_view_container">
+				<div class="row items-container" id='library_view'>
+					<div class="col-md-12"> 
+	                <?php foreach($files as $k => $file): ?>  
+		                <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-id='<?=$file->ID?>' id='_media_<?=$k?>'>
+		                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
+		                    <div class="col-xs-3 col-md-3 trackname" title="<?=$file->Trackname?>">
+								<span><?=$file->Trackname?></span>
+							</div>
+							<div class="col-xs-3 col-md-3 artistname" title="<?=$file->Artist?>">
+								<span><?=$file->Artist?></span>
+							</div>
+							<div class="col-xs-3 col-md-3 albumname" title="<?=$file->Album?>">
+								<span><?=$file->Album?></span>
+							</div>
+							<div class="col-xs-1 col-md-1 plays" title="<?=$file->Plays?> Plays">
+								<span><?=$file->Plays?></span>
+							</div>
+		                </div>
+	                <?php endforeach; ?>
+	                </div>
+	            </div>
+	        </div>
             <?php else: ?>
 				<h1>No music found :(</h1>
             <?php endif; ?>

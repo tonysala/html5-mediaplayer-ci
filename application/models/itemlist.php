@@ -190,15 +190,12 @@ class ItemList extends CI_Model {
 		}
 	}
 	
-	public function get_fullpath($title){
-		if (empty($this->_objects)){
-			$this->load_db_objects();
-		}
-		foreach($this->_objects as $object){
-			if ($title === $object->SplFile->getFileName()){
-				$path = preg_replace('/\/var\/www\//','http://',$object->SplFile->getRealPath());
-				return $path;
-			}
+	public function get_fullpath($id){
+		$fullpath = $this->get_item($id)->Filename;
+		$basepath = '/var/www/player/';
+		$pos = strpos($fullpath,$basepath);
+		if ($pos !== false) {
+			return substr_replace($fullpath,base_url(),$pos,strlen($basepath));
 		}
 		return false;
 	}
