@@ -50,6 +50,13 @@
 					<span>LIBRARY</span>
 					<span style='text-align:right;' class='playlist-item-count'>(<?=count($files)?>)</span>
 				</div>
+				<div class="sidebar-row" id='find_new'>
+					<span>FIND NEW MUSIC</span>
+				</div>
+				<div class="sidebar-row" id='downloads'>
+					<span>DOWNLOADS</span>
+					<span style='text-align:right;' class='downloads-item-count'></span>
+				</div>
 				<div class="sidebar-row">
 					<span>SETTINGS</span>
 				</div>
@@ -72,9 +79,9 @@
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu" id="sort_menu" role="menu">
-							    <li><a href="#">Track</a></li>
-								<li><a href="#">Artist</a></li>
-								<li><a href="#">Album</a></li>
+							    <li><a href="#" data-sortby='trackname'>Track</a></li>
+								<li><a href="#" data-sortby='artistname'>Artist</a></li>
+								<li><a href="#" data-sortby='albumname'>Album</a></li>
 							</ul>
 							<button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-sort-alpha-asc"></i></button>
 						</div>

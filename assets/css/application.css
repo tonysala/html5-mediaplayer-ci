@@ -30,7 +30,7 @@ html, body {
 	-webkit-user-select: none;   
 	-moz-user-select: none;
 }
-.item-row , .header-row {
+.item-row , .header-row, .result-row {
     transition: all 0.4s ease;
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
@@ -86,6 +86,12 @@ html, body {
     border-bottom: 1px solid #969696;
     color: white;
     height: 30px;
+}
+.item-download {
+	height: 20px;
+	margin: 2px;
+	line-height: 6px!important;
+	color: #666!important;
 }
 .sort_search input, .sort_search button, .sort_search div {
 	height:28px;

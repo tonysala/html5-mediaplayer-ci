@@ -26,7 +26,8 @@ $(document).ready(function(){
 		moving        : undefined,
 		current_view  : "library_view",
 		current_playlist : undefined,
-		items         : {}
+		items         : {},
+		sort_order    : 1
 	}
 	
 	window.elements = {
@@ -410,7 +411,7 @@ $(document).ready(function(){
 		return count;
 	}
     
-    sort_items = function(by, asc){
+    var sort_items = function(by, asc){
 		$items = $(".item-row");
 		$item_container = $(".items-container");
 		
@@ -427,6 +428,53 @@ $(document).ready(function(){
 		});
 		
 		$items.detach().appendTo($item_container);
+	}
+    
+    get = function(query,callback){
+		$.ajax({
+			"url"  : "xhr/query_songs",
+			"data" : {
+				query : query
+				},
+			"type" : "get",
+			"dataType": "json"
+		})
+		.done(function(response){
+			console.log(response.data);
+			console.log("success");
+			$(".result-row").remove();
+			for(var c = 0; c < response.data.length; c++){
+				console.log(response.data[c].title);
+				$("<div></div>")
+				.hide()
+				.addClass("row result-row")
+				.attr({ 'data-engine' : response.data[c].engine })
+				.append($("<div></div>")
+					.addClass("col-xs-1 col-md-1 resultstatus")
+				)
+				.append($("<div></div>")
+					.attr({ title : response.data[c].title })
+					.addClass("col-xs-7 col-md-7 resultname")
+					.append($("<span></span>")
+						.text(response.data[c].title)
+					)
+				)
+				.append($("<div></div>")
+					.addClass("col-xs-4 col-md-4 resultactions")
+					.append($("<button></button>")
+						.addClass("btn btn-default item-download")
+						.text("Download")
+					)
+				).appendTo("#library_view > div");
+			}
+			$(".result-row").fadeIn(200);
+		})
+		.always(function(data){
+			if (typeof callback === "function"){
+				callback.call();
+			}
+			//console.log(data);
+		});
 	}
     
     // End of functions
@@ -556,6 +604,17 @@ $(document).ready(function(){
     $("#item_filter").on("keyup",function(e){
         $filter = $(this);
         var query = $filter.val().toLowerCase();
+        if (app_vars.current_view === "find_new"){
+			if (e.keyCode === 13){
+				$(this).val(query+' (loading...)');
+				$filter.blur();
+				get(query,function(){
+					$("#item_filter").val(query);
+				});
+				return;
+			}
+			return
+		}
         if (e.keyCode === 27){
 			$filter.blur();
 			return;
@@ -854,6 +913,21 @@ $(document).ready(function(){
 		app_vars.current_view = "library_view";
 	});
 	
+	$("#find_new").on("click",function(){
+		switch_view("find_new",function(){
+			console.log("find_new opened");
+		},$(this));	
+		app_vars.current_view = "find_new";
+	});
 	
+	// Sort items code
+	$("#sort_menu > li").on("click",function(){
+		sort_items($(this).data('sortby'),app_vars.sort_order);
+		if (app_vars.sort_order === 1){
+			app_vars.sort_order = 0;
+		} else {
+			app_vars.sort_order = 1;
+		}
+	});
 	
 });

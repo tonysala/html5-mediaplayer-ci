@@ -95,6 +95,24 @@ class Xhr extends CI_Controller {
 		}
 	}
 	
+	public function query_songs(){
+		if ($query = $this->input->get("query")){
+			
+			$fetcher = new Fetcher;
+			$result = $fetcher->query($query);
+			if ($result){
+				print json_encode(array(
+					"data" =>$result,
+					"error"=>false
+				));
+			} else {
+				print json_encode(array("error"=>true));
+			}
+		} else {
+			print json_encode(array("error"=>true));
+		}
+	}
+	
 	private function _get_google_img($term, $offset = 0){
 	    $url = "https://www.google.co.uk/search?as_st=y&tbm=isch&hl=en&as_q=".urlencode($term)."&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:l,iar:s";
 	    if (!$web_page = file_get_contents($url)){
