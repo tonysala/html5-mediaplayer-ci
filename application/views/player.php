@@ -48,7 +48,7 @@
 				</div>
 				<div class="sidebar-row" id='library_sidebar_row'>
 					<span>LIBRARY</span>
-					<span style='text-align:right;' class='playlist-item-count'>(<?=count($files)?>)</span>
+					<span style='text-align:right;' class='library-item-count'>(<?=count($files)?>)</span>
 				</div>
 				<div class="sidebar-row" id='find_new_sidebar_row'>
 					<span>FIND NEW MUSIC</span>
@@ -64,7 +64,7 @@
 			<div id="cover_art_container">
 				<img id="cover_art_image" src="assets/images/album-placeholder.png">
 				<div id="cover_art_actions_container">
-				
+
 				</div>
 			</div>
 		</div>
@@ -75,7 +75,7 @@
 				<div class="col-sm-4 col-md-5 hidden-xs">
 					<div class="input-group">
 						<div class="input-group-btn sort_search">
-							<button type="button" id="sort_by" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by 
+							<button type="button" id="sort_by" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu" id="sort_menu" role="menu">
@@ -91,8 +91,8 @@
 			</div>
 			<div id="page_views_container">
 				<div class="row items-container pageview" id='library_view'>
-					<div class="col-md-12"> 
-	                <?php foreach($files as $k => $file): ?>  
+					<div class="col-md-12">
+	                <?php foreach($files as $k => $file): ?>
 		                <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-index='<?=$k?>' id='_media_<?=$file->ID?>'>
 		                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
 		                    <div class="col-xs-3 col-md-3 trackname" title="<?=$file->Trackname?>">
@@ -113,12 +113,12 @@
 	            </div>
 	            <div class="row pageview" id="downloads_view">
 					<div class="col-md-12">
-						
+
 					</div>
 	            </div>
 	            <div class="row pageview" id="search_view">
 					<div class="col-md-12">
-						
+
 					</div>
 	            </div>
 	        </div>
@@ -153,4 +153,4 @@
     <li class="divider"></li>
     <li id='delete_item'><a tabindex="-1">Delete from Library</a></li>
 </ul>
-    
+

@@ -508,7 +508,7 @@ $(document).ready(function(){
 	};
 
 	var update_queue_count = function(){
-		$(".queue").find(".queue-item-count").text("("+app_vars.queue.length+")");
+		$("#queue_sidebar_row").find(".queue-item-count").text("("+app_vars.queue.length+")");
 	};
 
 	var update_playlist_count = function(playlist){
@@ -663,7 +663,7 @@ $(document).ready(function(){
 		})
 		.done(function(){
 			$download_button
-			.text("")
+			.html("")
 			.append($('<i></i>')
 				.addClass('fa fa-check')
 				.css({"line-height": "7px"})
@@ -676,7 +676,6 @@ $(document).ready(function(){
 				console.debug("download queue:",app_vars.downloads);
 				console.debug("next download in queue: "+app_vars.downloads[0]);
 				download_item(app_vars.downloads[0]);
-				//$("#"+app_vars.downloads[0]).find(".download-button").triggerHandler("click");
 			}
 			else {
 				console.debug("end of download queue.");
@@ -1274,6 +1273,7 @@ $(document).ready(function(){
 	.on("click",function(){
 		var playlist = $(this).data().playlistname;
 		switch_view("playlist",function(){
+			$(".item-row").hide();
 			for (var c = 0; c < app_vars.playlists[playlist].length; c++){
 				console.debug("adding: "+app_vars.playlists[playlist][c]);
 				console.debug($("#library_view > div > #_media_"+app_vars.playlists[playlist][c]));
