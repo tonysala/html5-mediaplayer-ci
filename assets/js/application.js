@@ -74,11 +74,8 @@ $(document).ready(function(){
 	console.log("loaded "+app_vars.items.length+" items");
 
     // Function Definitions
-    var item_selected = function(items,remote){
-		var classname = "item-row";
-		if (remote === true){
-			classname = "result-row";
-		}
+    var item_selected = function(items){
+		var classname = get_row_classname();
 		if (typeof items !== 'object'){
 			throw new Error("item_selected() expects an array, "+(typeof items)+" given");
 		}
@@ -93,8 +90,8 @@ $(document).ready(function(){
 			}
 			var $ele = get_item_element_by_id(this);
 			// check if this item is already in the selected array
-			if ($.inArray(this,app_vars.selected) === -1){
-				app_vars.selected.push(this);
+			if ($.inArray(parseInt(this),app_vars.selected) === -1){
+				app_vars.selected.push(parseInt(this));
 				$ele.addClass("selected-row");
 			}
 		});
@@ -733,6 +730,20 @@ $(document).ready(function(){
 		$(".preview-button").on("click",preview_item);
 	};
 
+	var get_row_classname = function(){
+		var classname;
+		if (app_vars.current_view === "library_view"){
+			classname = "item-row";
+		}
+		else if (app_vars.current_view === "downloads_view"){
+			classname = "download-row";
+		}
+		else if (app_vars.current_view === "results_view"){
+			classname = "result-row";
+		}
+		return classname;
+	};
+
     var get_files = function(query,callback){
 		if ($(".download-row").length){
 			$(".download-row").each(function(){
@@ -842,36 +853,35 @@ $(document).ready(function(){
 		}
 		// left click (selected item)
 		else {
+			var classname = get_row_classname();
 			if (event.which === 1){
 				var c;
 				// with shift key
 				if (event.shiftKey){
 					// multi select items
-					var low, high, items = [];
-					var num_selected = app_vars.selected.length;
-					var min_selected = app_vars.selected[0];
-					var max_selected = app_vars.selected[num_selected-1];
-					var new_selected = $row.getId();
-					if (new_selected > max_selected){
-						low = min_selected;
-						high = new_selected;
-						app_vars.high_last_multi_sel = true;
-					} else if (new_selected < min_selected){
-						low = new_selected;
-						high = max_selected;
-						app_vars.high_last_multi_sel = false;
-					} else if (app_vars.high_last_multi_sel){
-						low = min_selected;
-						high = new_selected;
-						app_vars.high_last_multi_sel = true;
-					} else {
-						low = new_selected;
-						high = max_selected;
-						app_vars.high_last_multi_sel = false;
+					var items = [];
+					var $items = [];
+					var $low = $("."+classname+".selected-row").first();
+					if (!$low.length){
+						$items.push($row);
 					}
-					for (c = low; c <= high; c++){
-						items.push(c);
+					else {
+						var $high = $("."+classname+".selected-row").last();
+						if ($row.index() > $low.index()){
+							$items = $low.nextUntil($row);
+						}
+						else if ($row.index() < $low.index()){
+							$items = $high.prevUntil($row);
+						}
+						else if ($row.index() === $low.index()){
+							$items = $row;
+						}
+						$items.push($low);
+						$items.push($row);
 					}
+					$.each($items,function(){
+						items.push($(this).getId());
+					});
 					item_selected(items);
 				// with ctrl key
 				}
@@ -890,10 +900,7 @@ $(document).ready(function(){
 					}
 					console.log("new array");
 					console.log(item_ids);
-					for (c = 0; c < item_ids.length; c++){
-						$items.push($("#_media_"+app_vars.selected[c]));
-					}
-					item_selected($items);
+					item_selected(item_ids);
 				}
 				else {
 					item_selected([$row.getId()]);
@@ -1093,16 +1100,12 @@ $(document).ready(function(){
 	.on("keydown",function(event) {
 		var key = event.keyCode;
 		if (key === 70 && event.ctrlKey) { // Ctrl + f
-			var $element = $("#item_filter");
-			$element.scrollIntoView(300,'swing');
-			setTimeout(function(){
-				$element.focus();
-			},300);
+			$element.focus();
 			event.preventDefault();
 		} else if (key === 85 && event.ctrlKey){ // Ctrl + u
 			event.preventDefault();
 		} else if (key === 65 && event.ctrlKey){
-			item_selected($(".item-row"));
+			item_selected(app_vars.items);
 		}
 		console.log("KEY: "+key);
 	})
