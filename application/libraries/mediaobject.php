@@ -25,7 +25,7 @@ class MediaObject {
 	public $CI;
 
 	public function __construct(StdClass $object = null) {   
-        if ($object === null){
+        if (!($object instanceof StdClass)){
 			return;
 		}
 		$this->CI =& get_instance();

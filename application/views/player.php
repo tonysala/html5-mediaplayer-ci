@@ -38,7 +38,7 @@
 	<div class="row">
 		<div class="hidden-xs sidebar <?=$skin?>">
             <div id="sidebar_list">
-				<div class="sidebar-row queue">
+				<div class="sidebar-row" id='queue_sidebar_row'>
 					<span style='text-align:left'>PLAY QUEUE</span>
 					<span style='text-align:right;' class='queue-item-count'></span>
 				</div>
@@ -46,18 +46,18 @@
 					<span style='text-align:left'>WORK PLAYLIST</span>
 					<span style='text-align:right;' class='playlist-item-count'></span>
 				</div>
-				<div class="sidebar-row" id='library'>
+				<div class="sidebar-row" id='library_sidebar_row'>
 					<span>LIBRARY</span>
 					<span style='text-align:right;' class='playlist-item-count'>(<?=count($files)?>)</span>
 				</div>
-				<div class="sidebar-row" id='find_new'>
+				<div class="sidebar-row" id='find_new_sidebar_row'>
 					<span>FIND NEW MUSIC</span>
 				</div>
-				<div class="sidebar-row" id='downloads'>
+				<div class="sidebar-row" id='downloads_sidebar_row'>
 					<span>DOWNLOADS</span>
-					<span style='text-align:right;' class='downloads-item-count'></span>
+					<span style='text-align:right;' id='downloads_item_count'></span>
 				</div>
-				<div class="sidebar-row">
+				<div class="sidebar-row" id='settings_sidebar_row'>
 					<span>SETTINGS</span>
 				</div>
 			</div>
@@ -79,9 +79,9 @@
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu" id="sort_menu" role="menu">
-							    <li><a href="#" data-sortby='trackname'>Track</a></li>
-								<li><a href="#" data-sortby='artistname'>Artist</a></li>
-								<li><a href="#" data-sortby='albumname'>Album</a></li>
+							    <li data-sortby='trackname'><a href="#">Track</a></li>
+								<li data-sortby='artistname'><a href="#">Artist</a></li>
+								<li data-sortby='albumname'><a href="#">Album</a></li>
 							</ul>
 							<button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-sort-alpha-asc"></i></button>
 						</div>
@@ -89,11 +89,11 @@
 					</div>
                 </div>
 			</div>
-			<div id="library_view_container">
-				<div class="row items-container" id='library_view'>
+			<div id="page_views_container">
+				<div class="row items-container pageview" id='library_view'>
 					<div class="col-md-12"> 
 	                <?php foreach($files as $k => $file): ?>  
-		                <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-id='<?=$file->ID?>' id='_media_<?=$k?>'>
+		                <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-index='<?=$k?>' id='_media_<?=$file->ID?>'>
 		                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
 		                    <div class="col-xs-3 col-md-3 trackname" title="<?=$file->Trackname?>">
 								<span><?=$file->Trackname?></span>
@@ -110,6 +110,16 @@
 		                </div>
 	                <?php endforeach; ?>
 	                </div>
+	            </div>
+	            <div class="row pageview" id="downloads_view">
+					<div class="col-md-12">
+						
+					</div>
+	            </div>
+	            <div class="row pageview" id="search_view">
+					<div class="col-md-12">
+						
+					</div>
 	            </div>
 	        </div>
             <?php else: ?>

@@ -17,7 +17,7 @@ class ItemList extends CI_Model {
 		$this->_extensions = $this->config->item('allowed_exts');
 		$this->load_db_objects();
 	}
-	
+
 	public function set_watch_paths($paths = array()){
 		if (is_array($paths)){
 			$this->_paths = $paths;
@@ -25,7 +25,7 @@ class ItemList extends CI_Model {
 			throw new ItemListException("set_watch_paths() expects 1 parameter of type array, ".gettype($paths)." given");
 		}
 	}
-	
+
 	public function generate_files_list($paths = null, $append = true){
 		if ($paths === null) {
 			$paths = $this->_paths;
@@ -50,7 +50,7 @@ class ItemList extends CI_Model {
 		$this->new_items = $this->item_count - $this->_db_count;
 		return $this->_files;
 	}
-	
+
 	public function get_id3_tags($file){
 		$id3_info = new getID3();
 		$id3_info->analyze($file->getRealPath());
@@ -60,7 +60,7 @@ class ItemList extends CI_Model {
 		}
 		return $tags;
 	}
-	
+
 	public function get_list_as_links(){
 		if (empty($this->_objects)){
 			$this->load_db_objects();
@@ -69,7 +69,7 @@ class ItemList extends CI_Model {
 			return preg_replace('/\/var\/www\//','http://',$object->SplFile->getRealPath());
 		},$this->_objects);
 	}
-	
+
 	public function get_list_as_paths(){
 		if (empty($this->_objects)){
 			$this->load_db_objects();
@@ -78,21 +78,23 @@ class ItemList extends CI_Model {
 			return substr($object->SplFile->getRealPath(),strrpos($object->SplFile->getRealPath(),"/")+1);
 		},$this->_objects);
 	}
-	
+
 	public function get_item($id){
-		$result = $this->db->query("SELECT * FROM `music` WHERE `ID` = ".$this->db->escape($id)." LIMIT 1;");
-		try {
-			$result = new MediaObject($result->first_row());
-		} catch (MediaObjectException $e){
-			// Error Handling
-			return;
+		$row = $this->db->query("SELECT * FROM `music` WHERE `ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
+		if (empty($row)){
+			return false;
 		}
-		
+		try {
+			$result = new MediaObject($row);
+		} catch (MediaObjectException $e){
+			throw new ItemListException("Failed to instantiate MediaObject, ".$e->getMessage());
+		}
+
 		return $result;
 	}
-	
+
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT * FROM music');
+		$items = $this->db->query('SELECT music.* FROM music LEFT JOIN artists ON music.ArtistID = artists.ID ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();
 		if (is_array($results)){
@@ -102,7 +104,7 @@ class ItemList extends CI_Model {
 				} catch (MediaObjectException $e){
 					unset($results[$k]);
 				}
-				//print "<script>console.log('".$k." / ".count($results)." | ".$result->tags['title'][0]." - ".$result->tags['artist'][0]." (".$result->tags['year'][0].")');</script>"; 
+				//print "<script>console.log('".$k." / ".count($results)." | ".$result->tags['title'][0]." - ".$result->tags['artist'][0]." (".$result->tags['year'][0].")');</script>";
 				//flush();
 				//ob_flush();
 				//ob_end_flush();
@@ -116,8 +118,8 @@ class ItemList extends CI_Model {
 			return false;
 		}
 	}
-	
-	public function write_files_to_db($files = null){
+
+	public function write_files_to_db($files = null, $feedback = false){
 		if ($files === null) {
 			if (empty($this->_files)){
 				$this->generate_files_list();
@@ -129,12 +131,6 @@ class ItemList extends CI_Model {
 			$realpath = $file->getRealPath();
 			$tags = $this->get_id3_tags($file);
 			$sql = array();
-			//if (array_key_exists(0,$tags)){
-				//$tags = $tags[0];
-			//}
-			//print "<pre>";
-			//print_r($tags);
-			//print "</pre>";
 			if (isset($tags['artist'][0])){
 				$artist = $this->check_foreign($tags['artist'][0],'ArtistName','artists');
 				$sql[] = " ArtistID = ".$artist." ";
@@ -171,13 +167,15 @@ class ItemList extends CI_Model {
 					. $sql
 					. " WHERE FileMD5='".$md5."';");
 			}
-			print "<script>console.log('Writing: ".$count."/479 New: ".$result."')</script>";
-			flush();
-			ob_flush();
+			if ($feedback){
+				print "<script>console.log('Writing: ".$count."/479 New: ".$result."')</script>";
+				flush();
+				ob_flush();
+			}
 		}
 		return $result;
 	}
-	
+
 	public function check_foreign($value, $foreign_col, $table){
 		$value = $this->db->escape($value);
 		$result = $this->db->query("SELECT ID FROM `".$table."` WHERE ".$foreign_col." = ".$value);
@@ -189,24 +187,27 @@ class ItemList extends CI_Model {
 			return $this->db->insert_id();
 		}
 	}
-	
+
 	public function get_fullpath($id){
-		$fullpath = $this->get_item($id)->Filename;
-		$basepath = '/var/www/player/';
-		$pos = strpos($fullpath,$basepath);
-		if ($pos !== false) {
-			return substr_replace($fullpath,base_url(),$pos,strlen($basepath));
+		$item = $this->get_item($id);
+		if ($item !== false){
+			$fullpath = $item->Filename;
+			$basepath = '/var/www/player/';
+			$pos = strpos($fullpath,$basepath);
+			if ($pos !== false) {
+				return substr_replace($fullpath,base_url(),$pos,strlen($basepath));
+			}
 		}
 		return false;
 	}
-	
+
 	public function get_object_list(){
 		if (empty($this->_objects)){
 			$this->load_db_objects();
 		}
 		return $this->_objects;
 	}
-	
+
 	private function _valid_file($name){
 		if ($name !== "." && $name !== ".."){
 			$extension = substr($name,strrpos($name,"."));
