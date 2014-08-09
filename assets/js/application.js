@@ -33,7 +33,6 @@ $(document).ready(function(){
 		downloads     : [],
 		preview : {
 			on: false,
-			$button: undefined,
 			id : undefined
 		}
 	};
@@ -71,7 +70,7 @@ $(document).ready(function(){
 	});
     //chrome.notifications.create('item-play',{TemplateType:'basic',title:'now playing'});
 
-	console.log("loaded "+app_vars.items.length+" items");
+	console.debug("loaded "+app_vars.items.length+" items");
 
     // Function Definitions
     var item_selected = function(items){
@@ -79,7 +78,7 @@ $(document).ready(function(){
 		if (typeof items !== 'object'){
 			throw new Error("item_selected() expects an array, "+(typeof items)+" given");
 		}
-		console.log("items selected: ("+items.length+")");
+		console.debug("items selected: ("+items.length+")");
         // unselect previously selected items
         $("."+classname).removeClass("selected-row");
         app_vars.selected = [];
@@ -119,11 +118,12 @@ $(document).ready(function(){
 		// resume the player
 		player.play();
 		// resume the progress bar
-		$(player).on("play",function(){
-			elements.$progress_bar.animate(
-				{ width: "100%" }, parseInt(player.duration - player.currentTime)*1000,"linear"
-			);
-		});
+		//$(player).on("play",function(){
+			//elements.$progress_bar.animate(
+				//{ width: "100%" }, parseInt(player.duration - player.currentTime)*1000,"linear"
+			//);
+		//});
+		start_seeker();
 		// set status to 1 (playing)
 		app_vars.status = 1;
 	};
@@ -149,12 +149,18 @@ $(document).ready(function(){
 	};
 
 	var play_item = function(link){
-		console.log("loading remote media: "+link);
+		console.debug("loading remote media: "+link);
 		// set player source
 		$("#_player > source").prop({
 			"src" :link,
 			"type":"audio/mpeg"
 		});
+		// set player play/pause button to pause icon
+		var $playpause_button = elements.$control_playpause.find(".fa");
+		$playpause_button.removeClass("fa-play");
+		$playpause_button.addClass("fa-pause");
+		// reset the seeker
+		reset_seeker();
 		// initialise the player
 		player.load();
 		// start seeker animation
@@ -167,10 +173,10 @@ $(document).ready(function(){
 		// resume/start the progress bar
 		$(player).on("play",function(){
 			elements.$progress_bar.animate({
-				width: "100%"},parseInt(player.duration)*1000,"linear"
+				width: "100%"},(player.duration - player.currentTime)*1000,"linear"
 			);
 			elements.$track_pointer.animate({
-				left: "100%"},parseInt(player.duration)*1000,"linear"
+				left: "100%"},(player.duration - player.currentTime)*1000,"linear"
 			);
 		});
 	};
@@ -189,8 +195,7 @@ $(document).ready(function(){
 	};
 
 	var get_item_element_by_index = function(index){
-		var id = app_vars.items[index];
-		return get_item_element_by_id(id);
+		return $(".item-row").eq(index);
 	};
 
 	var get_item_element_by_id = function(id){
@@ -199,6 +204,9 @@ $(document).ready(function(){
 	};
 
 	var get_item_index_by_id = function(id){
+		if (id === undefined){
+			throw new Error('id must not be undefined in get_item_index_by_id(id)');
+		}
 		return app_vars.items.indexOf(id);
 	};
 
@@ -207,8 +215,7 @@ $(document).ready(function(){
 			throw new Error('id must not be undefined in get_next_id_in_order(id)');
 		}
 		var $ele = get_item_element_by_id(id);
-		var $next_ele = $ele.next();
-		return $next_ele.getId();
+		return $ele.next().getId();
 	};
 
 	var get_first_id_in_order = function(){
@@ -234,12 +241,10 @@ $(document).ready(function(){
 		// set some vars
 		var trackname = $ele.find(".trackname span").text();
 		var artistname = $ele.find(".artistname span").text();
-		console.log("loading '"+artistname+" - "+trackname+"'");
+		console.debug("loading '"+artistname+" - "+trackname+"'");
 		var $row_status = $ele.find(".row-status");
 		// change the current track text
 		set_current_track_text("Playing: <b>"+trackname+" - "+artistname+"</b>");
-		// reset progress bar
-		reset_seeker();
 		// set current item variable
 		app_vars.current = parseInt(item_id);
 		// remove all item status icons
@@ -247,10 +252,6 @@ $(document).ready(function(){
 		// set the current item status icon to pause icon
 		$row_status.removeClass("fa-play");
 		$row_status.addClass("fa-pause");
-		// change control icon
-		var $playpause_button = elements.$control_playpause.find(".fa");
-		$playpause_button.removeClass("fa-play");
-		$playpause_button.addClass("fa-pause");
 		// get the items media url
 		$.ajax({
 			url  : "/xhr/get_url",
@@ -260,7 +261,6 @@ $(document).ready(function(){
 			type: "get"
 		}).done(function(url){
 			play_item(url);
-			app_vars.status = 1;
 			load_cover_art();
 		}).fail(function(){
 			console.warn("failed getting url from server.");
@@ -302,14 +302,18 @@ $(document).ready(function(){
 			title = item_clicked(item_id);
 			$element.scrollIntoView();
 		} else if (app_vars.loop === true){
-            app_vars.status = 1;
-            player.load();
+            if (app_vars.current === undefined){
+				load_item(get_first_id_in_order());
+			}
+			else {
+	            load_item(app_vars.current);
+			}
         } else {
             if (app_vars.shuffle === false){
                 if (app_vars.current === undefined){
 					next = get_first_id_in_order();
 				} else {
-					console.log("current id : "+app_vars.current);
+					console.debug("current id : "+app_vars.current);
 					next = get_next_id_in_order(app_vars.current);
 				}
                 if (get_item_element_by_id(next) !== undefined){
@@ -317,29 +321,29 @@ $(document).ready(function(){
                 } else {
                     item_id = get_first_id_in_order();
                 }
-                console.log("next item id : "+item_id);
+                console.debug("next item id : "+item_id);
                 $element = get_item_element_by_id(item_id);
                 item_clicked(item_id);
                 $element.scrollIntoView();
-                load_item(item_id);
+                //load_item(item_id);
             } else {
                 var found = false;
                 while(found === false){
                     next_index = Math.floor(Math.random() * (app_vars.items.length - 0 + 1)) + 0;
-                    next = app_vars.items[next];
-                    if (get_item_id_by_index(next) !== app_vars.current && app_vars.items[next] !== undefined){
+                    next = $(".item-row").eq(next_index).getId();
+
+                    if (next !== undefined && next !== app_vars.current){
 						found = true;
-						item_id = next;
 						// Add to player history
 
-						app_vars.history.items.push(item_id);
+						app_vars.history.items.push(next);
 						app_vars.history.pointer++;
 
-						title = item_clicked(item_id);
-						$element = get_item_element_by_id(item_id);
+						title = item_clicked(next);
+						$element = get_item_element_by_id(next);
 						$element.scrollIntoView();
-						console.log("POINTER:"+app_vars.history.pointer);
-						console.log(app_vars.history.items);
+						console.debug("POINTER:"+app_vars.history.pointer);
+						console.debug(app_vars.history.items);
 		            }
                 }
             }
@@ -349,12 +353,13 @@ $(document).ready(function(){
 	var prev_item = function(){
 		var next_id;
 		if (app_vars.current === undefined){
-			item_clicked(get_last_id_in_order);
+			item_clicked(get_first_id_in_order());
 			return;
 		}
-		if (player.currentTime > 3){
-			item_clicked(app_vars.current);
-		} else {
+		if (player.currentTime > 3 || app_vars.loop === true){
+			load_item(app_vars.current);
+		}
+		else {
 			if (app_vars.shuffle === false){
                 var prev = get_item_index_by_id(app_vars.current) - 1;
                 if (prev >= 0){
@@ -364,9 +369,9 @@ $(document).ready(function(){
                 }
                 item_clicked(next_id);
             } else {
-				console.log("POINTER:"+app_vars.history.pointer);
-				console.log(app_vars.history.items);
-				if (app_vars.history.pointer > 0){
+				console.debug("POINTER:"+app_vars.history.pointer);
+				console.debug(app_vars.history.items);
+				if (app_vars.history.pointer > 0 && app_vars.history.items[app_vars.history.pointer] !== app_vars.current){
 					app_vars.history.pointer--;
 					next_id = app_vars.history.items[app_vars.history.pointer];
 					item_clicked(next_id);
@@ -383,7 +388,7 @@ $(document).ready(function(){
 
 	var load_cover_art = function(){
 		if (typeof $coverart_request !== 'undefined'){
-			console.log("aborted");
+			console.debug("aborted");
 			$coverart_request.abort();
 		}
 		$coverart_request = $.ajax({
@@ -508,7 +513,7 @@ $(document).ready(function(){
 
 	var update_playlist_count = function(playlist){
 		$(".playlist").filter(function(){
-			console.log($(this).data('playlistname'),playlist);
+			console.debug($(this).data('playlistname'),playlist);
 			return ($(this).data('playlistname') === playlist);
 		})
 		.find(".playlist-item-count").text("("+app_vars.playlists[playlist].length+")");
@@ -544,7 +549,7 @@ $(document).ready(function(){
 	};
 
 	var download_item = function(id){
-		console.log("downloading item ("+id+")");
+		console.debug("downloading item ("+id+")");
 		var $result;
 		var $download;
 		$result = $(".result-row").filter(function(index){
@@ -567,12 +572,19 @@ $(document).ready(function(){
 			$download = $result.clone(true,true)
 				.prependTo("#downloads_view > div")
 				.addClass("download-row")
-				.removeClass("result-row");
+				.removeClass("result-row")
+				// remove the preview button
+				.find(".preview-button")
+					.remove();
 		}
 
 		var $download_button = $download.find(".download-button");
-		if ($.inArray($download.data('id'),app_vars.downloads)){
+		// Make sure this download isn't in the queue already
+		if ($.inArray($download.data('id'),app_vars.downloads) === -1){
 			app_vars.downloads.push($download.data('id'));
+		}
+		else {
+			throw new Error('Item already in the download queue.');
 		}
 		// Mark the number of items in the downloads view
 		$("#downloads_item_count").text("("+$(".download-row").length+")");
@@ -582,15 +594,17 @@ $(document).ready(function(){
 		// If there is more than one item in the download queue AND this isn't the next in the queue
 		// then we should add this to the end of the queue
 		if (app_vars.downloads.length > 1 && $.inArray($download.data('id'),app_vars.downloads) !== 0){
+			console.debug('item queued :'+$download.data('id'));
 			$download_button.text('Queued');
 			return;
 		}
 		// Otherwise start the download
 		else {
+			console.debug('download started :'+$download.data('id'));
 			$download_button.prop('disabled',true);
 			$download_button.text('Downloading [0%]');
 		}
-		console.log("Fetching "+$result.data('href')+" using "+$result.data('engine')+" engine");
+		console.debug("Fetching "+$result.data('href')+" using "+$result.data('engine')+" engine");
 		$.ajax({
 			url  : "xhr/download_item",
 			data : {
@@ -614,7 +628,6 @@ $(document).ready(function(){
 						str = "?";
 					}
 					$download_button.text('Downloading ('+str+'%)');
-					console.log(str+"%");
 				}
 			}
 		})
@@ -645,53 +658,61 @@ $(document).ready(function(){
 		})
 		.always(function(){
 			if (app_vars.downloads.length){
-				console.log("download queue:",app_vars.downloads);
-				console.log("next download in queue: "+app_vars.downloads[0]);
+				console.debug("download queue:",app_vars.downloads);
+				console.debug("next download in queue: "+app_vars.downloads[0]);
 				download_item(app_vars.downloads[0]);
 				//$("#"+app_vars.downloads[0]).find(".download-button").triggerHandler("click");
 			}
 			else {
-				console.log("end of download queue.");
+				console.debug("end of download queue.");
 			}
 		});
 	};
 
-	var preview_item = function(){
-		var $result = $(this).closest(".result-row");
-		var $button = $(this);
-		console.log(app_vars.preview.on);
-		console.log($button.text());
-		console.log($button.text() === "Stop");
-		if (app_vars.preview.on && $result.attr("id") === app_vars.preview.id){
-			player.pause();
+	var preview_item = function(id){
+		if (id === undefined){
+			throw new Error('id must not be undefined in preview_item(id) function');
+		}
+
+		var $result;
+		var $preview_button;
+
+		$result = $(".result-row").filter(function(index){
+			return (id === $(this).data('id'));
+		}).first();
+
+		if (!$result.length){
+			throw new Error('Failed to find the result row');
+		}
+
+		var $preview_button = $result.find(".preview-button");
+
+		console.debug(app_vars.preview);
+
+		if (app_vars.preview.on && $result.data("id") === app_vars.preview.id){
+			app_vars.preview.on = false;
+			pause_item();
 			$(".preview-button").text("Preview");
 			return;
 		}
-		if (!app_vars.preview.on && $result.attr("id") === app_vars.preview.id){
-			player.play();
-			$button.text("Stop");
+		if (!app_vars.preview.on && $result.data("id") === app_vars.preview.id){
+			app_vars.preview.on = true;
+			resume_item();
+			$preview_button.text("Pause");
 			return;
 		}
 		$(".preview-button").text("Preview");
 		// Reset the progress bar
-		elements.$progress_bar.stop(true).animate({
-			width: "0%"},500);
-		elements.$track_pointer.stop(true).animate({
-			left: "0%"},500);
-		// We should pause..
-		app_vars.status = 0;
+		reset_seeker();
 		if (app_vars.current !== undefined){
-			var $ele = $("#_media_"+app_vars.current);
-			var $row_status = $ele.find(".row-status");
-			$row_status.removeClass("fa-pause");
-			$row_status.addClass("fa-play");
-			var $playpause_button = elements.$control_playpause.find(".fa");
-			$playpause_button.removeClass("fa-pause");
-			$playpause_button.addClass("fa-play");
+			pause_item();
 		}
 		// Start preview code
-		app_vars.preview.on = false;
-		console.log("Previewing "+$result.data('href')+" using "+$result.data('engine')+" engine");
+		app_vars.preview = {
+			on : false,
+			id : undefined
+		}
+		console.debug("Previewing "+$result.data('href')+" using "+$result.data('engine')+" engine");
 		$.ajax({
 			url  : "xhr/preview_item",
 			data : {
@@ -701,33 +722,24 @@ $(document).ready(function(){
 			type : "get"
 		})
 		.fail(function(){
-			$button.text('Failed');
-			app_vars.downloads.shift();
-			if (app_vars.downloads.length){
-				$("#"+app_vars.downloads[0]).find(".download-button").triggerHandler("click");
-			}
+			console.warn("failed to get preview link.");
+			$preview_button.text('Failed');
 		})
 		.done(function(link){
-			$("#_player > source").prop({
-				"src" :link,
-				"type":"audio/mpeg"
-			});
-			player.load();
-			app_vars.preview.$button = $button;
+			play_item(link);
 			app_vars.preview.on = true;
-			app_vars.preview.id = $result.attr('id');
-			$button.text("Stop");
+			app_vars.preview.id = $result.data('id');
+			$preview_button.text("Pause");
 		});
 	};
 
     var add_result_listeners = function(){
 		$(".download-button").on("click",function(){
-			var id = $(this).data("id");
-			//console.log(id);
-			//return;
-			download_item(id);
+			download_item($(this).data("id"));
 		});
-		$(".preview-button").on("click",preview_item);
+		$(".preview-button").on("click",function(){
+			preview_item($(this).closest('.result-row').data('id'));
+		});
 	};
 
 	var get_row_classname = function(){
@@ -745,12 +757,16 @@ $(document).ready(function(){
 	};
 
     var get_files = function(query,callback){
+		if (typeof $search_request !== 'undefined'){
+			console.debug("aborted");
+			$search_request.abort();
+		}
 		if ($(".download-row").length){
 			$(".download-row").each(function(){
 				$(this).data({'id':undefined});
 			});
 		}
-		$.ajax({
+		$search_request = $.ajax({
 			"url"  : "xhr/query_songs",
 			"data" : {
 				query : query
@@ -767,8 +783,7 @@ $(document).ready(function(){
 				var downloads_count = $(".download-row").length;
 				var rand = hash(6);
 				for(var c = 0; c < response.data.length; c++){
-					console.log
-					console.log(response.data[c].title);
+					console.debug(response.data[c].title);
 					$("<div></div>")
 						.hide()
 						.addClass("row result-row")
@@ -816,7 +831,8 @@ $(document).ready(function(){
 			if (typeof callback === "function"){
 				callback.call();
 			}
-			//console.log(data);
+			$search_request = undefined;
+			//console.debug(data);
 		});
 	};
     // --------------------------
@@ -856,11 +872,11 @@ $(document).ready(function(){
 			var classname = get_row_classname();
 			if (event.which === 1){
 				var c;
+				var $items = [];
 				// with shift key
 				if (event.shiftKey){
 					// multi select items
 					var items = [];
-					var $items = [];
 					var $low = $("."+classname+".selected-row").first();
 					if (!$low.length){
 						$items.push($row);
@@ -887,19 +903,19 @@ $(document).ready(function(){
 				}
 				else if (event.ctrlKey){
 					var item_ids = app_vars.selected;
-					console.log("old_array");
-					console.log(item_ids);
-					var $items = [];
+					console.debug("old_array");
+					console.debug(item_ids);
+					$items = [];
 					var id = $row.getId();
-					console.log("id: "+id);
+					console.debug("id: "+id);
 					if ($.inArray(id,item_ids) !== -1){
 						var array_index = item_ids.indexOf(id);
 						item_ids.splice(array_index, 1);
 					} else {
 						item_ids.push(id);
 					}
-					console.log("new array");
-					console.log(item_ids);
+					console.debug("new array");
+					console.debug(item_ids);
 					item_selected(item_ids);
 				}
 				else {
@@ -922,14 +938,14 @@ $(document).ready(function(){
 		}
 	})
 	.on("dragend",function(e){
-		//console.log(e);
+		//console.debug(e);
 	});
 
 	$(".result-row").on("mouseup",function(){
 
 	})
 	.on("dblclick",function(){
-		remote_selected($(this).getId());
+		item_selected($(this).getId());
 	});
 
 	// ContextMenu Code
@@ -987,29 +1003,41 @@ $(document).ready(function(){
     // End Search code
 
     $(player)
-    .on("ended stalled",function(){
-        if (app_vars.preview_playing){
-
+    .on("stalled",function(){
+        if (app_vars.preview.on){
+			pause_item();
 		}
-        next_item();
+		else {
+	        next_item();
+	    }
     })
     .on("ended", function(){
 		if (app_vars.preview.on){
-			app_vars.preview.on = false;
+			app_vars.preview = {
+				on : false,
+				id : undefined
+			};
 			return;
 		}
 		$.ajax({
 			url : "xhr/played",
 			data: {
-				id: app_vars.items[$("#_media_"+app_vars.current).getId()]
+				id: app_vars.current
 			},
 			type: "get"
-		}).done(function(e){
-			console.log(e);
+		})
+		.done(function(e){
+			console.debug('increment play count');
+		})
+		.fail(function(e){
+			console.warn('failed to increment play count, ID: '+app_vars.current);
+			console.warn(e);
 		});
+		// play next item
+		next_item();
 	})
 	.on("seeking",function(){
-		console.log("trying to fetch data...");
+		console.debug("trying to fetch data...");
 	});
 
     $("#volume_down, #volume_up").on("click",function(){
@@ -1052,7 +1080,7 @@ $(document).ready(function(){
         }
 	});
 
-	elements.$control_prev.on("click dblclick",function(){
+	elements.$control_prev.on("click",function(){
 		prev_item();
 	});
 
@@ -1107,7 +1135,7 @@ $(document).ready(function(){
 		} else if (key === 65 && event.ctrlKey){
 			item_selected(app_vars.items);
 		}
-		console.log("KEY: "+key);
+		console.debug("KEY: "+key);
 	})
 	.on("keyup",function(event){
 
@@ -1149,9 +1177,9 @@ $(document).ready(function(){
 			dataType: "json",
 			type: "get"
 		}).done(function(response){
-			console.log(response);
+			console.debug(response);
 		}).fail(function(obj){
-			console.log(obj);
+			console.debug(obj);
 		});
 		//item_selected($row);
 		e.stopPropagation();
@@ -1198,15 +1226,15 @@ $(document).ready(function(){
 	$(".playlist")
 	.on("drop",function(e){
 		var playlist = $(e.target).data().playlistname;
-		console.log("adding to :"+playlist);
+		console.debug("adding to :"+playlist);
 		for (var c = 0;c < app_vars.moving.length; c++){
 			if ($.inArray(app_vars.moving[c],app_vars.playlists[playlist]) === -1){
 				$(this).data().itemcount += 1;
 				app_vars.playlists[playlist].unshift(app_vars.moving[c]);
 				// ajax code
-				//console.log("item added to "+playlist);
+				//console.debug("item added to "+playlist);
 			} else {
-				//console.log("item already in playlist");
+				//console.debug("item already in playlist");
 			}
 		}
 		update_playlist_count(playlist);
@@ -1219,8 +1247,8 @@ $(document).ready(function(){
 		var playlist = $(this).data().playlistname;
 		switch_view("playlist",function(){
 			for (var c = 0; c < app_vars.playlists[playlist].length; c++){
-				console.log("adding: "+app_vars.playlists[playlist][c]);
-				console.log($("#library_view > div > #_media_"+app_vars.playlists[playlist][c]));
+				console.debug("adding: "+app_vars.playlists[playlist][c]);
+				console.debug($("#library_view > div > #_media_"+app_vars.playlists[playlist][c]));
 				$("#_media_"+app_vars.playlists[playlist][c]).show().addClass("playlist-item");
 			}
 		},$(this));
@@ -1230,14 +1258,14 @@ $(document).ready(function(){
 
 	$("#queue_sidebar_row")
 	.on("drop",function(e){
-		console.log("adding to queue");
+		console.debug("adding to queue");
 		for (var c = 0;c < app_vars.moving.length; c++){
 			if ($.inArray(app_vars.moving[c],app_vars.queue) === -1){
 				app_vars.queue.unshift(app_vars.moving[c]);
 				// ajax code
-				console.log("item added to queue: "+app_vars.moving[c]);
+				console.debug("item added to queue: "+app_vars.moving[c]);
 			} else {
-				//console.log("item already in playlist");
+				//console.debug("item already in playlist");
 			}
 		}
 		update_queue_count();
@@ -1267,7 +1295,7 @@ $(document).ready(function(){
 		switch_view("downloads",function(){
 			$(".pageview").hide();
 			$("#downloads_view").show();
-			console.log("downloads opened");
+			console.debug("downloads opened");
 		},$(this));
 	});
 
@@ -1275,7 +1303,7 @@ $(document).ready(function(){
 		switch_view("find_new",function(){
 			$(".pageview").hide();
 			$("#search_view").show();
-			console.log("find_new opened");
+			console.debug("find_new opened");
 		},$(this));
 	});
 
