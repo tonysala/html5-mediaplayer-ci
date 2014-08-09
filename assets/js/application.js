@@ -562,6 +562,10 @@ $(document).ready(function(){
 
 		var $result_button = $result.find(".download-button");
 
+		if (!$result_button.length){
+			throw new Error('Failed to find the result download button');
+		}
+
 		$download = $(".download-row").filter(function(index){
 			return id === $(this).data('id');
 		}).first();
@@ -572,13 +576,24 @@ $(document).ready(function(){
 			$download = $result.clone(true,true)
 				.prependTo("#downloads_view > div")
 				.addClass("download-row")
-				.removeClass("result-row")
-				// remove the preview button
-				.find(".preview-button")
-					.remove();
+				.removeClass("result-row");
+
+			// remove the preview button
+			$download.find(".preview-button")
+				.remove();
 		}
 
+		if (!$download.length){
+			throw new Error('Failed to find the download row');
+		}
+		console.log($download);
 		var $download_button = $download.find(".download-button");
+
+		if (!$download_button.length){
+			console.warn($download_button);
+			throw new Error('could not find download button');
+		}
+
 		// Make sure this download isn't in the queue already
 		if ($.inArray($download.data('id'),app_vars.downloads) === -1){
 			app_vars.downloads.push($download.data('id'));
@@ -690,9 +705,7 @@ $(document).ready(function(){
 		console.debug(app_vars.preview);
 
 		if (app_vars.preview.on && $result.data("id") === app_vars.preview.id){
-			app_vars.preview.on = false;
-			pause_item();
-			$(".preview-button").text("Preview");
+			pause_preview();
 			return;
 		}
 		if (!app_vars.preview.on && $result.data("id") === app_vars.preview.id){
@@ -732,6 +745,15 @@ $(document).ready(function(){
 			$preview_button.text("Pause");
 		});
 	};
+
+	var pause_preview = function(){
+		pause_item();
+		app_vars.preview = {
+			on : false,
+			id : undefined
+		};
+		$(".preview-button").text("Preview");
+	}
 
     var add_result_listeners = function(){
 		$(".download-button").on("click",function(){
@@ -1005,7 +1027,7 @@ $(document).ready(function(){
     $(player)
     .on("stalled",function(){
         if (app_vars.preview.on){
-			pause_item();
+			pause_preview();
 		}
 		else {
 	        next_item();
@@ -1013,10 +1035,7 @@ $(document).ready(function(){
     })
     .on("ended", function(){
 		if (app_vars.preview.on){
-			app_vars.preview = {
-				on : false,
-				id : undefined
-			};
+			pause_preview();
 			return;
 		}
 		$.ajax({
@@ -1086,6 +1105,14 @@ $(document).ready(function(){
 
 	elements.$control_playpause.on("click",function(){
 		var $icon = $(this).find(".fa");
+		if (app_vars.preview.on){
+			pause_preview();
+			return;
+		}
+		if (app_vars.preview.id){
+			resume_item();
+			return;
+		}
 		if (app_vars.status === 0){
 			$icon.removeClass("fa-play");
 			$icon.addClass("fa-pause");
@@ -1094,7 +1121,8 @@ $(document).ready(function(){
 			} else {
 				next_item();
 			}
-		} else if (app_vars.current !== undefined) {
+		}
+		else if (app_vars.current !== undefined) {
 			$icon.removeClass("fa-pause");
 			$icon.addClass("fa-play");
 			pause_item($("#_media_"+app_vars.current));
