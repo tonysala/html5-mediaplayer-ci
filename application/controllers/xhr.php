@@ -20,8 +20,10 @@ class Xhr extends CI_Controller {
 
 		$path = $this->itemlist->get_fullpath($id);
 		if ($path === false){
-			header("HTTP/1.1 404 Content Not Found");
-		} else {
+			print "fail";
+			//header("HTTP/1.1 404 Content Not Found");
+		}
+		else {
 			print $path;
 		}
 	}

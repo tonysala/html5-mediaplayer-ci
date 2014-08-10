@@ -36,7 +36,7 @@
 <!-- Spinning fa icon! <i class="fa fa-circle-o-notch fa-spin"></i> -->
 <div class="container-fluid page-wrapper">
 	<div class="row">
-		<div class="hidden-xs sidebar <?=$skin?>">
+		<div class="sidebar <?=$skin?>">
             <div id="sidebar_list">
 				<div class="sidebar-row" id='queue_sidebar_row'>
 					<span style='text-align:left'>PLAY QUEUE</span>
@@ -71,8 +71,8 @@
 		<div class="col-md-12 content <?=$skin?>">
 			<?php if (count($files)): ?>
 			<div class="row header-row <?=$skin?>">
-				<div class="col-sm-8 col-md-7 current-track-container"><span id="current_track">Playing: </span></div>
-				<div class="col-sm-4 col-md-5 hidden-xs">
+				<div class="col-xs-5 col-md-7 current-track-container"><span id="current_track">Playing: </span></div>
+				<div class="col-xs-7 col-md-5">
 					<div class="input-group">
 						<div class="input-group-btn sort_search">
 							<button type="button" id="sort_by" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by
