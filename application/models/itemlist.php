@@ -179,7 +179,6 @@ class ItemList extends CI_Model {
 	public function check_foreign($value, $foreign_col, $table){
 		$value = $this->db->escape($value);
 		$result = $this->db->query("SELECT ID FROM `".$table."` WHERE ".$foreign_col." = ".$value);
-		print "<script>console.log(".json_encode($result).")</script>";
 		if ($result->num_rows() !== 0){
 			return $result->first_row()->ID;
 		} else {

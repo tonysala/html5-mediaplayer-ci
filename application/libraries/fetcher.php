@@ -76,7 +76,10 @@ abstract class Engine {
 	    flush();
 		@ob_flush();
 	    if ($progress > $this->previous_progress){
-	        print "|".$progress;
+	        print "|".json_encode(array(
+				"progress" => (string)$progress,
+				"error" => false
+			));
 	        $this->previous_progress = $progress;
 	    }
 	}
@@ -192,12 +195,14 @@ class Mp3li extends Engine {
 		    curl_close($ch);
 		    $filesize = $fileinfo['download_content_length'];
 		    if ($fileinfo['content_type'] !== "audio/mpeg"){
-				return false;
+				print '|'.json_encode(array('error'=>true,'message'=>'unknown content type ('.$fileinfo['content_type'].')'));
+				return;
 			} else {
 				$title = preg_replace('/[^\s\&\'\(\)a-zA-Z0-9\-_]+/','-',$title);
 				$filename = "/var/www/player/tracks/".$title.".mp3";
 				if (file_exists($filename)){
-					return false;
+					print '|'.json_encode(array('error'=>true,'message'=>'already downloaded'));
+					return;
 				}
 				$target = fopen($filename, 'w');
 				$ch = curl_init($link);
@@ -206,19 +211,35 @@ class Mp3li extends Engine {
 				curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, array($this,'progress_callback'));
 				curl_setopt($ch, CURLOPT_FILE, $target);
 				curl_exec($ch);
-				curl_close($ch);
+				print '|';
 				fclose($target);
-				if (!file_exists($filename)){
-					return false;
+				$filesize = curl_getinfo($ch,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+				$downloaded = curl_getinfo($ch,CURLINFO_SIZE_DOWNLOAD);
+				curl_close($ch);
+				if ($downloaded !== -1 && $downloaded < $filesize){
+					log_message('error','download interrupted '.curl_getinfo($ch,CURLINFO_SIZE_DOWNLOAD).'/'.curl_getinfo($ch,CURLINFO_CONTENT_LENGTH_DOWNLOAD));
+					unlink($filename);
+					print json_encode(array('error'=>true,'message'=>'download interrupted'));
+					return;
 				}
-				if ($this->previous_progress === 0){
-					return false;
+				else if (!file_exists($filename)){
+					print json_encode(array('error'=>true,'message'=>'file could not be saved'));
+					return;
 				}
-				chmod($filename,777);
-				return $filename;
+				else if ($this->previous_progress === 0){
+					print json_encode(array('error'=>true,'message'=>'download not started'));
+					return;
+				}
+				else {
+					chmod($filename,777);
+					print json_encode(array('error'=>false));
+					return $filename;
+				}
 			}
-		} else {
-			return false;
+		}
+		else {
+			print json_encode(array('error'=>true,'message'=>'download link not found'));
+			return;
 		}
 	}
 

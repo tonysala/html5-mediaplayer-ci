@@ -128,13 +128,13 @@ class Xhr extends CI_Controller {
 		if ($href && $engine){
 			$fetcher = new Fetcher($engine);
 			$file = $fetcher->download($href, $title);
-			if ($file){
+			if ($file !== false){
 				exit;
 			} else {
-				header("HTTP/1.0 403 Duplicate content");
+				print "|".json_encode(array("error"=>true,'message'=>'unknown error'));
 			}
 		} else {
-			print json_encode(array("error"=>true));
+			print json_encode(array("error"=>true,"message"=>"missing params"));
 		}
 	}
 

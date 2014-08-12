@@ -617,7 +617,7 @@ $(document).ready(function(){
         else {
             console.debug('download started :'+$download.data('id'));
             $download_button.prop('disabled',true);
-            $download_button.text('Downloading [0%]');
+            $download_button.text('Downloading (0%)');
         }
         console.debug("Fetching "+$result.data('href')+" using "+$result.data('engine')+" engine");
         $.ajax({
@@ -630,19 +630,22 @@ $(document).ready(function(){
             type : "get",
             xhrFields: {
                 onprogress: function (e) {
-                    var new_str;
-                    var str = e.currentTarget.response;
-                    str = str.substring(str.lastIndexOf('|') + 1);
-                    if (str === ""){
-                        str = 0;
-                    }
-                    else if ((new_str = str.match(/\d{1,3}/)) !== null){
-                        str = new_str;
+                    var response = e.currentTarget.response;
+                    var progress = 0;
+                    response = response.substring(response.lastIndexOf('|') + 1);
+                    if (response === ""){
+                        progress = 0;
                     }
                     else {
-                        str = "?";
-                    }
-                    $download_button.text('Downloading ('+str+'%)');
+						var json_response = JSON.parse(response);
+						if (typeof json_response === 'object'){
+							progress = json_response.progress;
+						}
+						else {
+							progress = "?";
+						}
+					}
+                    $download_button.text('Downloading ('+progress+'%)');
                 }
             }
         })
@@ -660,13 +663,49 @@ $(document).ready(function(){
             $result_button.prop('disabled',false);
             $download_button.prop('disabled',false);
         })
-        .done(function(){
-            $download_button.html("")
-            .append($('<i></i>')
-                .addClass('fa fa-check')
-                .css({"line-height": "7px"})
-            );
-            $download_button.prop('disabled',true);
+        .done(function(response){
+            console.log(response);
+            response = response.substring(response.lastIndexOf('|') + 1);
+            var message = '';
+            if (response === "" || response === undefined){
+				message = 'no data recieved';
+			}
+			else {
+				var json_response = JSON.parse(response);
+				if (typeof json_response === 'object'){
+					if (json_response.error === true){
+						message = json_response.message;
+					}
+				}
+				else {
+					message = 'malformed data recieved';
+				}
+			}
+			if (message === ''){
+				$download_button.html("")
+				.append($('<i></i>')
+					.addClass('fa fa-check')
+					.css({"line-height": "7px"})
+				);
+				$download_button.prop('disabled',true);
+			}
+			else {
+				$result_button.html("")
+	                .append($('<i></i>')
+	                .addClass('fa fa-warning')
+	                .css({"line-height": "8px"})
+	                .attr({title:message})
+	            );
+	            $download_button.html("")
+	                .append($('<i></i>')
+	                .addClass('fa fa-warning')
+	                .css({"line-height": "8px"})
+	                .attr({title:message})
+	            );
+	            $result_button.prop('disabled',false);
+	            $download_button.prop('disabled',false);
+	            console.warn(message);
+			}
         })
         .always(function(){
 			app_vars.downloads.shift();
