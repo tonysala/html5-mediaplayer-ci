@@ -557,13 +557,13 @@ $(document).ready(function(){
         }).first();
 
         if (!$result.length){
-            throw new Error('Failed to find the result row');
+            // throw new Error('Failed to find the result row');
         }
 
         var $result_button = $result.find(".download-button");
 
         if (!$result_button.length){
-            throw new Error('Failed to find the result download button');
+            // throw new Error('Failed to find the result download button');
         }
 
         $download = $(".download-row").filter(function(index){
@@ -590,22 +590,22 @@ $(document).ready(function(){
         var $download_button = $download.find(".download-button");
 
         if (!$download_button.length){
-            console.warn($download_button);
             throw new Error('could not find download button');
         }
 
         // Make sure this download isn't in the queue already
         if ($.inArray($download.data('id'),app_vars.downloads) === -1){
             app_vars.downloads.push($download.data('id'));
+			// Mark the number of items in the downloads view
+	        $("#downloads_item_count").text("("+$(".download-row").length+")");
+	        // Disable the download buttons
+	        $result_button.prop('disabled',true);
+	        $download_button.prop('disabled',true);
         }
         else {
-            throw new Error('Item already in the download queue.');
+            // throw new Error('Item already in the download queue.');
         }
-        // Mark the number of items in the downloads view
-        $("#downloads_item_count").text("("+$(".download-row").length+")");
-        // Disable the download buttons
-        $result_button.prop('disabled',true);
-        $download_button.prop('disabled',true);
+
         // If there is more than one item in the download queue AND this isn't the next in the queue
         // then we should add this to the end of the queue
         if (app_vars.downloads.length > 1 && $.inArray($download.data('id'),app_vars.downloads) !== 0){
@@ -659,19 +659,17 @@ $(document).ready(function(){
             );
             $result_button.prop('disabled',false);
             $download_button.prop('disabled',false);
-            app_vars.downloads.shift();
         })
         .done(function(){
-            $download_button
-            .html("")
+            $download_button.html("")
             .append($('<i></i>')
                 .addClass('fa fa-check')
                 .css({"line-height": "7px"})
             );
-            app_vars.downloads.shift();
             $download_button.prop('disabled',true);
         })
         .always(function(){
+			app_vars.downloads.shift();
             if (app_vars.downloads.length){
                 console.debug("download queue:",app_vars.downloads);
                 console.debug("next download in queue: "+app_vars.downloads[0]);
