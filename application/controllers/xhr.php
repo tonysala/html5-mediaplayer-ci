@@ -165,6 +165,7 @@ class Xhr extends CI_Controller {
 
 	public function debug(){
 		if ($query = $this->input->get("query")){
+			header("Content-Type: text/html",true);
 			$engine = $this->input->get("engine");
 			$fetcher = new Fetcher($engine);
 			$result = $fetcher->debug_query($query);
