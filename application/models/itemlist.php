@@ -194,7 +194,7 @@ class ItemList extends CI_Model {
 			$basepath = '/var/www/player/';
 			$pos = strpos($fullpath,$basepath);
 			if ($pos !== false) {
-				return substr_replace($fullpath,$_SERVER['HTTP_HOST'],$pos,strlen($basepath));
+				return substr_replace($fullpath,$_SERVER['HTTP_HOST'].'/'.,$pos,strlen($basepath));
 			}
 		}
 		return false;
