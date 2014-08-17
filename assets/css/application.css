@@ -164,8 +164,13 @@ html, body {
     border-color:#141414;
     background:#222;
 }
+@media (min-width:768px){
+	.content {
+		padding-left:215px!important;
+	}
+}
+
 .content {
-	padding-left:215px!important;
 	height:100%;
     background:#fafafa;
 }
@@ -389,12 +394,10 @@ img#cover_art_image:hover {
 }
 
 @media (max-width:767px){
-/*
 	.content {
 		padding-left:15px!important;
 	}
 	.header-row {
 		padding-right:15px!important;
 	}
-*/
 }

@@ -36,7 +36,7 @@
 <!-- Spinning fa icon! <i class="fa fa-circle-o-notch fa-spin"></i> -->
 <div class="container-fluid page-wrapper">
 	<div class="row">
-		<div class="sidebar <?=$skin?>">
+		<div class="sidebar hidden-xs <?=$skin?>">
             <div id="sidebar_list">
 				<div class="sidebar-row" id='queue_sidebar_row'>
 					<span style='text-align:left'>PLAY QUEUE</span>
