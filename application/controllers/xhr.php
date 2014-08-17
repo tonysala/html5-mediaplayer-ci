@@ -125,7 +125,7 @@ class Xhr extends CI_Controller {
 			$fetcher = new Fetcher($engine);
 			$file = $fetcher->download($href, $title);
 			if ($file !== false){
-				exit;
+				print json_encode(["error"=>false,"updated"=>$file]);
 			} else {
 				print "|".json_encode(["error"=>true,'message'=>'unknown error']);
 			}
