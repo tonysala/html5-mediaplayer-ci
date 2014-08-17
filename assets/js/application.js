@@ -1192,7 +1192,7 @@ $(document).ready(function(){
     .on("keydown",function(event) {
         var key = event.keyCode;
         if (key === 70 && event.ctrlKey) { // Ctrl + f
-            $element.focus();
+            $("#item_filter").focus();
             event.preventDefault();
         } else if (key === 85 && event.ctrlKey){ // Ctrl + u
             event.preventDefault();

@@ -232,7 +232,6 @@ class Mp3li extends Engine {
 				}
 				else {
 					chmod($filename,777);
-					print json_encode(array('error'=>false));
 					return $filename;
 				}
 			}

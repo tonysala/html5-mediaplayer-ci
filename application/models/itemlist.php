@@ -194,12 +194,7 @@ class ItemList extends CI_Model {
 			$basepath = '/var/www/player/';
 			$pos = strpos($fullpath,$basepath);
 			if ($pos !== false) {
-				if ($_SERVER['HTTP_HOST'] === 'player'){
-					return substr_replace($fullpath,'http://player/',$pos,strlen($basepath));
-				}
-				else {
-					return substr_replace($fullpath,site_url().'player/',$pos,strlen($basepath));
-				}
+				return substr_replace($fullpath,$_SERVER['HTTP_HOST'],$pos,strlen($basepath));
 			}
 		}
 		return false;

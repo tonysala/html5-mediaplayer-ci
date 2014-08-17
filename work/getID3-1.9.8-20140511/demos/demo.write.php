@@ -14,8 +14,9 @@
 /////////////////////////////////////////////////////////////////
 
 
-die('Due to a security issue, this demo has been disabled. It can be enabled by removing line '.__LINE__.' in '.$_SERVER['PHP_SELF']);
-
+//die('Due to a security issue, this demo has been disabled. It can be enabled by removing line '.__LINE__.' in '.$_SERVER['PHP_SELF']);
+ini_set('display_errors',1);
+error_reporting(E_ALL);
 $TaggingFormat = 'UTF-8';
 
 header('Content-Type: text/html; charset='.$TaggingFormat);
@@ -44,7 +45,7 @@ if (isset($_POST['WriteTags'])) {
 		$tagwriter = new getid3_writetags;
 		$tagwriter->filename       = $Filename;
 		$tagwriter->tagformats     = $TagFormatsToWrite;
-		$tagwriter->overwrite_tags = false;
+		$tagwriter->overwrite_tags = true;
 		$tagwriter->tag_encoding   = $TaggingFormat;
 		if (!empty($_POST['remove_other_tags'])) {
 			$tagwriter->remove_other_tags = true;
