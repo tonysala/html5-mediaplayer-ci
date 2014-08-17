@@ -100,13 +100,8 @@ class Xhr extends CI_Controller {
 	public function query_songs(){
 		if ($query = $this->input->get("query")){
 			$engine = $this->input->get("engine");
-			$fetcher = new Fetcher("mp3li");
+			$fetcher = new Fetcher($engine);
 			$result = $fetcher->query($query);
-			// Backup engine
-			if (!$result){
-				$fetcher = new Fetcher("kohit");
-				$result = $fetcher->query($query);
-			}
 			if ($result){
 				print json_encode(array(
 					"data" =>$result,
@@ -131,10 +126,10 @@ class Xhr extends CI_Controller {
 			if ($file !== false){
 				exit;
 			} else {
-				print "|".json_encode(array("error"=>true,'message'=>'unknown error'));
+				print "|".json_encode(["error"=>true,'message'=>'unknown error']);
 			}
 		} else {
-			print json_encode(array("error"=>true,"message"=>"missing params"));
+			print json_encode(["error"=>true,"message"=>"missing params"]);
 		}
 	}
 
@@ -164,6 +159,24 @@ class Xhr extends CI_Controller {
 		    return $matches[1][$offset];
 		} else {
 			return false;
+		}
+	}
+
+	public function debug(){
+		if ($query = $this->input->get("query")){
+			$engine = $this->input->get("engine");
+			$fetcher = new Fetcher($engine);
+			$result = $fetcher->debug_query($query);
+			if ($result){
+				print json_encode(array(
+					"data" =>$result,
+					"error"=>false
+				));
+			} else {
+				print json_encode(array("error"=>true,"message"=>"no results found."));
+			}
+		} else {
+			print json_encode(array("error"=>true,"message"=>"no query provided."));
 		}
 	}
 }

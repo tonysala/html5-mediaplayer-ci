@@ -34,7 +34,8 @@ $(document).ready(function(){
         preview : {
             on: false,
             id : undefined
-        }
+        },
+        default_engine: 'mp3li'
     };
 
     window.elements = {
@@ -827,7 +828,8 @@ $(document).ready(function(){
         $search_request = $.ajax({
             "url"  : "xhr/query_songs",
             "data" : {
-                query : query
+                query : query,
+                engine: app_vars.default_engine
                 },
             "type" : "get",
             "dataType": "json"

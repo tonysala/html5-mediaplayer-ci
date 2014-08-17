@@ -28,6 +28,10 @@ class Fetcher {
 		exit;
 	}
 
+	public function debug_query($query){
+
+	}
+
 	public function download($href, $title){
 		if ($filename = $this->engine->get_download($href, $title)){
 			$fileinfo = new SplFileInfo($filename);
@@ -65,6 +69,11 @@ abstract class Engine {
 		$string = str_replace("<query>",$query, $this->url_format);
 		$string = str_replace("<base>",$this->base_url, $string);
 		return $string;
+	}
+
+	public function debug_query($query){
+		print file_get_contents($this->get_search_url($query));
+		exit;
 	}
 
 	protected function progress_callback($download_size, $downloaded_size, $upload_size, $uploaded_size){
@@ -205,6 +214,10 @@ class Mp3li extends Engine {
 					return;
 				}
 				$target = fopen($filename, 'w');
+				if ($fileinfo['content_type'] !== "audio/mpeg"){
+					print '|'.json_encode(array('error'=>true,'message'=>'unknown content type ('.$fileinfo['content_type'].')'));
+					return;
+				}
 				$ch = curl_init($link);
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 				curl_setopt($ch, CURLOPT_NOPROGRESS, false);
