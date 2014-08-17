@@ -29,7 +29,7 @@ class Fetcher {
 	}
 
 	public function debug_query($query){
-
+		$this->engine->debug_query($query);
 	}
 
 	public function download($href, $title){
@@ -72,7 +72,7 @@ abstract class Engine {
 	}
 
 	public function debug_query($query){
-		print file_get_contents($this->get_search_url($query));
+		print file_get_contents("http://".$this->get_search_url($query));
 		exit;
 	}
 
