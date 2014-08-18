@@ -94,11 +94,12 @@ class ItemList extends CI_Model {
 	}
 
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT * FROM music 
-			LEFT JOIN artists ON music.ArtistID = artists.ID 
-			LEFT JOIN albums ON music.AlbumID = albums.ID 
-			LEFT JOIN genres ON music.GenreID = genres.ID 
-			ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
+		$items = $this->db->query('SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName 
+		FROM music  
+			LEFT JOIN artists ON music.ArtistID = artists.ID  
+			LEFT JOIN albums ON music.AlbumID = albums.ID  
+			LEFT JOIN genres ON music.GenreID = genres.ID  
+		ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
 		
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();

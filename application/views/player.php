@@ -42,10 +42,6 @@
 					<span style='text-align:left'>PLAY QUEUE</span>
 					<span style='text-align:right;' class='queue-item-count'></span>
 				</div>
-				<div class="sidebar-row playlist" data-playlistname='work'>
-					<span style='text-align:left'>WORK PLAYLIST</span>
-					<span style='text-align:right;' class='playlist-item-count'></span>
-				</div>
 				<div class="sidebar-row" id='library_sidebar_row'>
 					<span>LIBRARY</span>
 					<span style='text-align:right;' class='library-item-count'>(<?=count($files)?>)</span>

@@ -134,10 +134,7 @@ class Xhr extends CI_Controller {
 		$result = [];
 		$playlists = $this->db->query("SELECT * FROM playlists")->result();
 		foreach($playlists as $playlist){
-			$result[$playlist->Name] = [
-				"name" => $playlist->Name,
-				"items" => json_decode($playlist->Items)
-			];
+			$result[$playlist->Name] = json_decode($playlist->Items);
 		}
 		print json_encode($result);
 	}

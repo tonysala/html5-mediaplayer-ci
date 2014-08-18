@@ -25,7 +25,7 @@ class MediaObject {
 	public $SplFile = null;
 	public $id3_info = null;
 	public $tags = [];
-	public $CI;
+	// public $CI;
 
 	private $defaults = array(
 		"ArtistName" => "-",
@@ -40,7 +40,7 @@ class MediaObject {
         if (!($object instanceof StdClass)){
 			return;
 		}
-		$this->CI =& get_instance();
+		// $this->CI =& get_instance();
         foreach (get_object_vars($object) as $key => $value) {
             if (property_exists($this,$key)){
 	            if (in_array($key, array_keys($this->defaults)) && empty($value)){
@@ -63,15 +63,15 @@ class MediaObject {
 		}
 	}
 	
-	public function get_foreign($id, $foreign_col, $table){
-		$id = $this->CI->db->escape($id);
-		// Cant escape table name using codeigniter function
-		$result = $this->CI->db->query("SELECT ".$foreign_col." FROM `".$table."` WHERE ID = ".$id.";");
-		$value = $result->first_row();
-		if (is_object($value)){
-			return $value->$foreign_col;
-		} else return "Unknown";
-	} 
+	// public function get_foreign($id, $foreign_col, $table){
+	// 	$id = $this->CI->db->escape($id);
+	// 	// Cant escape table name using codeigniter function
+	// 	$result = $this->CI->db->query("SELECT ".$foreign_col." FROM `".$table."` WHERE ID = ".$id.";");
+	// 	$value = $result->first_row();
+	// 	if (is_object($value)){
+	// 		return $value->$foreign_col;
+	// 	} else return "Unknown";
+	// } 
 	
 	// public function __get($property){
 	// 	if (property_exists($property,get_class($this))){
