@@ -70,10 +70,9 @@ $(document).ready(function(){
             dataType: "json",
             type: "get"
         })
-        .done(function(e){
-            app_vars.item_objs = e;
+        .done(function(items){
             var $library_view_inner = elements.$library_view.find("div");
-            $.each(app_vars.item_objs,function(index,$item){
+            $.each(items,function(index,$item){
                 // var $item = $(this);
                 console.log($item);
                 $("<div></div>")
@@ -126,12 +125,10 @@ $(document).ready(function(){
                         .text($item.Plays)
                     )
                 ).appendTo($library_view_inner);
+                app_vars.items.push($item.ID);
+                app_vars.item_objs.$item.ID = $item;
             });
-
-            $(".item-row").each(function(){
-                $this = $(this);
-                app_vars.items.push($this.getId());
-            });
+            add_item_row_listeners();
         });
     };
 
@@ -956,6 +953,116 @@ $(document).ready(function(){
             //console.debug(data);
         });
     };
+
+    var add_item_row_listeners = function(){
+        $(".item-row")
+        .on("dblclick",function(){
+            item_clicked($(this).getId());
+        })
+        .on("mouseup",function(event){
+            var menu_on = ($("#contextmenu").css("display") !== "none");
+            var $row = $(this);
+            // right click (open/close menu)
+            if (event.which === 3){
+                // if menu is already visible hide it and return
+                if (menu_on){
+                    hide_menu();
+                    return;
+                }
+                if ($.inArray($row.getId(),app_vars.selected) === -1){
+                    item_selected([$row.getId()]);
+                } else {
+                    // nothing
+                }
+                if (app_vars.selected.length > 1){
+                    set_rating(0);
+                } else {
+                    set_rating($row.data().rating);
+                }
+                show_menu();
+                event.preventDefault();
+            }
+            // left click (selected item)
+            else {
+                var classname = get_row_classname();
+                if (event.which === 1){
+                    var c;
+                    var $items = [];
+                    // with shift key
+                    if (event.shiftKey){
+                        // multi select items
+                        var items = [];
+                        var $low = $("."+classname+".selected-row").first();
+                        if (!$low.length){
+                            $items.push($row);
+                        }
+                        else {
+                            var $high = $("."+classname+".selected-row").last();
+                            if ($row.index() > $low.index()){
+                                $items = $low.nextUntil($row);
+                            }
+                            else if ($row.index() < $low.index()){
+                                $items = $high.prevUntil($row);
+                            }
+                            else if ($row.index() === $low.index()){
+                                $items = $row;
+                            }
+                            $items.push($low);
+                            $items.push($row);
+                        }
+                        $.each($items,function(){
+                            items.push($(this).getId());
+                        });
+                        item_selected(items);
+                    // with ctrl key
+                    }
+                    else if (event.ctrlKey){
+                        var item_ids = app_vars.selected;
+                        console.debug("old_array");
+                        console.debug(item_ids);
+                        $items = [];
+                        var id = $row.getId();
+                        console.debug("id: "+id);
+                        if ($.inArray(id,item_ids) !== -1){
+                            var array_index = item_ids.indexOf(id);
+                            item_ids.splice(array_index, 1);
+                        } else {
+                            item_ids.push(id);
+                        }
+                        console.debug("new array");
+                        console.debug(item_ids);
+                        item_selected(item_ids);
+                    }
+                    else {
+                        item_selected([$row.getId()]);
+                    }
+                    event.preventDefault();
+                } else {
+                    //event.preventDefault();
+                }
+                $("#contextmenu").fadeOut("200");
+                $("#playlist_list").slideUp();
+                app_vars.contextbox = false;
+            }
+        })
+        .on("dragstart",function(e){
+            if ($(this).hasClass("selected-row")){
+                app_vars.moving = app_vars.selected;
+            } else {
+                app_vars.moving = [$(this).getId()];
+            }
+        })
+        .on("dragend",function(e){
+            //console.debug(e);
+        });
+
+        $(".result-row").on("mouseup",function(){
+
+        })
+        .on("dblclick",function(){
+            item_selected($(this).getId());
+        });
+    }
     // --------------------------
     // End of functions
     // --------------------------
@@ -976,114 +1083,7 @@ $(document).ready(function(){
     // --------------------------
     // Event Handlers
     // --------------------------
-    $(".item-row")
-    .on("dblclick",function(){
-        item_clicked($(this).getId());
-    })
-    .on("mouseup",function(event){
-        var menu_on = ($("#contextmenu").css("display") !== "none");
-        var $row = $(this);
-        // right click (open/close menu)
-        if (event.which === 3){
-            // if menu is already visible hide it and return
-            if (menu_on){
-                hide_menu();
-                return;
-            }
-            if ($.inArray($row.getId(),app_vars.selected) === -1){
-                item_selected([$row.getId()]);
-            } else {
-                // nothing
-            }
-            if (app_vars.selected.length > 1){
-                set_rating(0);
-            } else {
-                set_rating($row.data().rating);
-            }
-            show_menu();
-            event.preventDefault();
-        }
-        // left click (selected item)
-        else {
-            var classname = get_row_classname();
-            if (event.which === 1){
-                var c;
-                var $items = [];
-                // with shift key
-                if (event.shiftKey){
-                    // multi select items
-                    var items = [];
-                    var $low = $("."+classname+".selected-row").first();
-                    if (!$low.length){
-                        $items.push($row);
-                    }
-                    else {
-                        var $high = $("."+classname+".selected-row").last();
-                        if ($row.index() > $low.index()){
-                            $items = $low.nextUntil($row);
-                        }
-                        else if ($row.index() < $low.index()){
-                            $items = $high.prevUntil($row);
-                        }
-                        else if ($row.index() === $low.index()){
-                            $items = $row;
-                        }
-                        $items.push($low);
-                        $items.push($row);
-                    }
-                    $.each($items,function(){
-                        items.push($(this).getId());
-                    });
-                    item_selected(items);
-                // with ctrl key
-                }
-                else if (event.ctrlKey){
-                    var item_ids = app_vars.selected;
-                    console.debug("old_array");
-                    console.debug(item_ids);
-                    $items = [];
-                    var id = $row.getId();
-                    console.debug("id: "+id);
-                    if ($.inArray(id,item_ids) !== -1){
-                        var array_index = item_ids.indexOf(id);
-                        item_ids.splice(array_index, 1);
-                    } else {
-                        item_ids.push(id);
-                    }
-                    console.debug("new array");
-                    console.debug(item_ids);
-                    item_selected(item_ids);
-                }
-                else {
-                    item_selected([$row.getId()]);
-                }
-                event.preventDefault();
-            } else {
-                //event.preventDefault();
-            }
-            $("#contextmenu").fadeOut("200");
-            $("#playlist_list").slideUp();
-            app_vars.contextbox = false;
-        }
-    })
-    .on("dragstart",function(e){
-        if ($(this).hasClass("selected-row")){
-            app_vars.moving = app_vars.selected;
-        } else {
-            app_vars.moving = [$(this).getId()];
-        }
-    })
-    .on("dragend",function(e){
-        //console.debug(e);
-    });
-
-    $(".result-row").on("mouseup",function(){
-
-    })
-    .on("dblclick",function(){
-        item_selected($(this).getId());
-    });
-
+    
     // ContextMenu Code
     $(".items-container , #contextmenu").on("contextmenu",function(){
         return false;
