@@ -53,7 +53,7 @@ $(document).ready(function(){
         return {
             opts: opts,
             url: function(){
-                return opts.Filename.replace("/var/www/player",window.location.origin+"/player");
+                return opts.Filename.replace("/var/www/player",window.location.origin);
             },
             play: function(){
                 // make sure we reset any playing previews
@@ -211,7 +211,7 @@ $(document).ready(function(){
             .append($("<span></span>")
                 .text($item.Plays)
             )
-        );       
+        );
     };
 
     var set_playlists = function(){
@@ -435,7 +435,7 @@ $(document).ready(function(){
                 next = app_vars.current;
             }
             media_objects[next].play();
-        } 
+        }
         // else get next item
         else {
             // linear progression
@@ -457,7 +457,7 @@ $(document).ready(function(){
                 media_objects[item_id].click();
                 // item_clicked(item_id);
                 $element.scrollIntoView();
-            } 
+            }
             // get random next item
             else {
                 var found = false;
@@ -1189,11 +1189,11 @@ $(document).ready(function(){
     // --------------------------
     // End of functions
     // --------------------------
-    
+
     // --------------------------
     // Setup player
     // --------------------------
-    
+
     $("#playlist_list").slideUp();
     $(".slider-pointer").css({'left': (player.volume * ($(".slider-line").width() - 4)) });
     $("#library_sidebar_row").css({"background":"ghostwhite"});
@@ -1206,7 +1206,7 @@ $(document).ready(function(){
     // --------------------------
     // Event Handlers
     // --------------------------
-    
+
     // ContextMenu Code
     $(".items-container , #contextmenu").on("contextmenu",function(){
         return false;
