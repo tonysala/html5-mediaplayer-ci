@@ -63,6 +63,16 @@ $(document).ready(function(){
         }
     };
 
+    window.MediaObject = function(opts){
+        var self = this;
+        return {
+            opts: opts,
+            url: function(){
+                return opts.Filename.replace("/var/www/player",window.location.origin);
+            }
+        };
+    };
+
     // Function Definitions
     var set_item_objs = function(){
         $.ajax({
@@ -75,60 +85,84 @@ $(document).ready(function(){
             $.each(items,function(index,$item){
                 // var $item = $(this);
                 console.log($item);
-                $("<div></div>")
-                .addClass("row item-row")
-                .attr({
-                    'draggable'   : true,
-                    'data-rating' : $item.Rating,
-                    'data-index'  : index,
-                    'id'          : "_media_"+$item.ID
-                })
-                .append($("<div></div>")
-                    .addClass("col-xs-1 col-md-1 row-status-container")
-                    .append($("<i></i>")
-                        .addClass("row-status fa")
-                    )
-                )
-                .append($("<div></div>")
-                    .addClass("col-xs-3 col-md-3 trackname")
-                    .attr({
-                        title:$item.TrackName
-                    })
-                    .append($("<span></span>")
-                        .text($item.TrackName)
-                    )
-                )
-                .append($("<div></div>")
-                    .addClass("col-xs-3 col-md-3 artistname")
-                    .attr({
-                        title:$item.ArtistName
-                    })
-                    .append($("<span></span>")
-                        .text($item.ArtistName)
-                    )
-                )
-                .append($("<div></div>")
-                    .addClass("col-xs-3 col-md-3 albumname")
-                    .attr({
-                        title:$item.AlbumName
-                    })
-                    .append($("<span></span>")
-                        .text($item.AlbumName)
-                    )
-                )
-                .append($("<div></div>")
-                    .addClass("col-xs-1 col-md-1 plays")
-                    .attr({
-                        title:$item.Plays
-                    })
-                    .append($("<span></span>")
-                        .text($item.Plays)
-                    )
-                ).appendTo($library_view_inner);
+                $element = add_item_to_library($item, index);
+                if ($element !== undefined){
+                    $element.appendTo($library_view_inner);
+                }
                 app_vars.items.push($item.ID);
-                app_vars.item_objs.$item.ID = $item;
+                // Add a hard link to the jQuery element to the item object
+                $item.element = $element;
+                app_vars.item_objs[$item.ID] = MediaObject($item);
+                app_vars.item_objs[$item.ID].url();
             });
             add_item_row_listeners();
+        });
+    };
+
+    var add_item_to_library = function($item, index){
+        if ($item.ID === undefined || $item.ID === null){
+            return undefined;
+        }
+        return $element = $("<div></div>")
+        .addClass("row item-row")
+        .attr({
+            'draggable'   : true,
+            'data-rating' : $item.Rating,
+            'data-index'  : index,
+            'id'          : "_media_"+$item.ID
+        })
+        .append($("<div></div>")
+            .addClass("col-xs-1 col-md-1 row-status-container")
+            .append($("<i></i>")
+                .addClass("row-status fa")
+            )
+        )
+        .append($("<div></div>")
+            .addClass("col-xs-3 col-md-3 trackname")
+            .attr({
+                title:$item.TrackName
+            })
+            .append($("<span></span>")
+                .text($item.TrackName)
+            )
+        )
+        .append($("<div></div>")
+            .addClass("col-xs-3 col-md-3 artistname")
+            .attr({
+                title:$item.ArtistName
+            })
+            .append($("<span></span>")
+                .text($item.ArtistName)
+            )
+        )
+        .append($("<div></div>")
+            .addClass("col-xs-3 col-md-3 albumname")
+            .attr({
+                title:$item.AlbumName
+            })
+            .append($("<span></span>")
+                .text($item.AlbumName)
+            )
+        )
+        .append($("<div></div>")
+            .addClass("col-xs-1 col-md-1 plays")
+            .attr({
+                title:$item.Plays
+            })
+            .append($("<span></span>")
+                .text($item.Plays)
+            )
+        );       
+    };
+
+    var set_playlists = function(){
+        $.ajax({
+            url: "xhr/get_playlists",
+            dataType: "json",
+            type: "get"
+        })
+        .done(function(items){
+            console.log(items);
         });
     };
 
@@ -291,41 +325,29 @@ $(document).ready(function(){
         return $next_ele.getId();
     };
 
-    var load_item = function(item_id){
-        // make sure we reset any playing previews
-        $(".preview-button").text("Preview");
-        app_vars.preview.on = false;
-        // get the element with id = item_id
-        var $ele = get_item_element_by_id(item_id);
-        // set some vars
-        var trackname = $ele.find(".trackname span").text();
-        var artistname = $ele.find(".artistname span").text();
-        console.debug("loading '"+artistname+" - "+trackname+"'");
-        var $row_status = $ele.find(".row-status");
-        // change the current track text
-        set_current_track_text("Playing: <b>"+trackname+" - "+artistname+"</b>");
-        // set current item variable
-        app_vars.current = parseInt(item_id);
-        // remove all item status icons
-        $(".item-row .row-status").removeClass("fa-pause fa-play");
-        // set the current item status icon to pause icon
-        $row_status.removeClass("fa-play");
-        $row_status.addClass("fa-pause");
-        // get the items media url
-        $ajax_obj = $.ajax({
-            url  : "xhr/get_url",
-            data : {
-                id    : item_id
-                },
-            type: "get"
-        }).done(function(url){
-            play_item(url);
-            load_cover_art();
-        }).fail(function(e){
-            console.warn("failed getting url from server.");
-            return false;
-        });
-    };
+    // var load_item = function(item_id){
+    //     // make sure we reset any playing previews
+    //     $(".preview-button").text("Preview");
+    //     app_vars.preview.on = false;
+    //     // get the element with id = item_id
+    //     var $ele = get_item_element_by_id(item_id);
+    //     // set some vars
+    //     var trackname = $ele.find(".trackname span").text();
+    //     var artistname = $ele.find(".artistname span").text();
+    //     console.debug("loading '"+artistname+" - "+trackname+"'");
+    //     var $row_status = $ele.find(".row-status");
+    //     // change the current track text
+    //     set_current_track_text("Playing: <b>"+trackname+" - "+artistname+"</b>");
+    //     // set current item variable
+    //     app_vars.current = parseInt(item_id);
+    //     // remove all item status icons
+    //     $(".item-row .row-status").removeClass("fa-pause fa-play");
+    //     // set the current item status icon to pause icon
+    //     $row_status.removeClass("fa-play");
+    //     $row_status.addClass("fa-pause");
+    //     play_item(url);
+    //     load_cover_art();
+    // };
 
     var item_clicked = function(id){
         // get element
@@ -339,7 +361,7 @@ $(document).ready(function(){
             resume_item();
         // else load the new item
         } else {
-            load_item(id);
+            play_item(app_vars.item_objs[id].url());
         }
         // scroll the element into view
         $ele.scrollIntoView();
@@ -362,11 +384,12 @@ $(document).ready(function(){
             $element.scrollIntoView();
         } else if (app_vars.loop === true){
             if (app_vars.current === undefined){
-                load_item(get_first_id_in_order());
+                next = get_first_id_in_order();
             }
             else {
-                load_item(app_vars.current);
+                next = app_vars.current;
             }
+            play_item(app_vars.item_objs[next].url());
         } else {
             if (app_vars.shuffle === false){
                 if (app_vars.current === undefined){
@@ -384,7 +407,6 @@ $(document).ready(function(){
                 $element = get_item_element_by_id(item_id);
                 item_clicked(item_id);
                 $element.scrollIntoView();
-                //load_item(item_id);
             } else {
                 var found = false;
                 while(found === false){
@@ -416,7 +438,8 @@ $(document).ready(function(){
             return;
         }
         if (player.currentTime > 3 || app_vars.loop === true){
-            load_item(app_vars.current);
+            next_id = app_vars.current;
+            play_item(app_vars.item_objs[next_id].url());
         }
         else {
             if (app_vars.shuffle === false){
@@ -465,7 +488,6 @@ $(document).ready(function(){
     };
 
     var save_cover_art = function(){
-
     };
 
     var hide_menu = function(){
@@ -1062,7 +1084,7 @@ $(document).ready(function(){
         .on("dblclick",function(){
             item_selected($(this).getId());
         });
-    }
+    };
     // --------------------------
     // End of functions
     // --------------------------
@@ -1077,6 +1099,7 @@ $(document).ready(function(){
     $("#library_sidebar_row").css({"background":"ghostwhite"});
 
     set_item_objs();
+    set_playlists();
 
     console.debug("loaded "+app_vars.items.length+" items");
 

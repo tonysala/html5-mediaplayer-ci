@@ -102,6 +102,46 @@ class Xhr extends CI_Controller {
 		}
 	}
 
+	public function add_playlist(){
+		$name = $this->input->get("name");
+		$items = $this->input->get("items");
+		if ($name !== false && $items !== false){
+			$name = $this->db->escape($name);
+			$items = $this->db->escape($items);
+			$this->db->query("INSERT INTO playlists SET Items = ".$items.", Name = ".$name.";");
+			print json_encode(["error"=>false]);
+		}
+		else {
+			print json_encode(["error"=>true,"message"=>"Missing parameters."]);
+		}
+	}
+
+	public function save_playlist(){
+		$name = $this->input->get("name");
+		$items = $this->input->get("items");
+		if ($name !== false && $items !== false){
+			$name = $this->db->escape($name);
+			$items = $this->db->escape($items);
+			$this->db->query("UPDATE playlists SET Items = ".$items." where Name = ".$name.";");
+			print json_encode(["error"=>false]);
+		}
+		else {
+			print json_encode(["error"=>true,"message"=>"Missing parameters."]);
+		}
+	}
+
+	public function get_playlists(){
+		$result = [];
+		$playlists = $this->db->query("SELECT * FROM playlists")->result();
+		foreach($playlists as $playlist){
+			$result[$playlist->Name] = [
+				"name" => $playlist->Name,
+				"items" => json_decode($playlist->Items)
+			];
+		}
+		print json_encode($result);
+	}
+
 	public function query_songs(){
 		if ($query = $this->input->get("query")){
 			$engine = $this->input->get("engine");
