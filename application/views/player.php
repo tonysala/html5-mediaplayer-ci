@@ -92,8 +92,8 @@
 			<div id="page_views_container">
 				<div class="row items-container pageview" id='library_view'>
 					<div class="col-md-12">
-	                <?php foreach($files as $k => $file): ?>
-		                <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-index='<?=$k?>' id='_media_<?=$file->ID?>'>
+	                <?php //foreach($files as $k => $file): ?>
+		            <!--     <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-index='<?=$k?>' id='_media_<?=$file->ID?>'>
 		                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
 		                    <div class="col-xs-3 col-md-3 trackname" title="<?=$file->Trackname?>">
 								<span><?=$file->Trackname?></span>
@@ -107,8 +107,8 @@
 							<div class="col-xs-1 col-md-1 plays" title="<?=$file->Plays?> Plays">
 								<span><?=$file->Plays?></span>
 							</div>
-		                </div>
-	                <?php endforeach; ?>
+		                </div> -->
+	                <?php //endforeach; ?>
 	                </div>
 	            </div>
 	            <div class="row pageview" id="downloads_view">

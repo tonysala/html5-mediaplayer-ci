@@ -85,6 +85,10 @@ class Xhr extends CI_Controller {
 		}
 	}
 
+	public function get_items(){
+		print json_encode($this->itemlist->get_object_list());
+	}
+
 	public function played(){
 		if ($id = $this->input->get("id")){
 			$result = $this->db->query("UPDATE music SET Plays = Plays + 1 WHERE ID = ".$id.";");

@@ -25,6 +25,7 @@ $(document).ready(function(){
         playing_view  : "library_view",
         current_playlist : undefined,
         items         : [],
+        item_objs     : {},
         sort          : {
             order: 1,
             by: undefined
@@ -44,6 +45,7 @@ $(document).ready(function(){
         $control_playpause : $("#control_playpause"),
         $control_next      : $("#control_next"),
         $control_prev      : $("#control_prev"),
+        $library_view      : $("#library_view")
     };
 
     // Cache the player element...
@@ -61,19 +63,78 @@ $(document).ready(function(){
         }
     };
 
-    $("#playlist_list").slideUp();
-    $(".slider-pointer").css({'left': (player.volume * ($(".slider-line").width() - 4)) });
-    $("#library_sidebar_row").css({"background":"ghostwhite"});
-
-    $(".item-row").each(function(){
-        $this = $(this);
-        app_vars.items.push($this.getId());
-    });
-    //chrome.notifications.create('item-play',{TemplateType:'basic',title:'now playing'});
-
-    console.debug("loaded "+app_vars.items.length+" items");
-
     // Function Definitions
+    var set_item_objs = function(){
+        $.ajax({
+            url: "xhr/get_items",
+            dataType: "json",
+            type: "get"
+        })
+        .done(function(e){
+            app_vars.item_objs = e;
+            var $library_view_inner = elements.$library_view.find("div");
+            $.each(app_vars.item_objs,function(index,$item){
+                // var $item = $(this);
+                console.log($item);
+                $("<div></div>")
+                .addClass("row item-row")
+                .attr({
+                    'draggable'   : true,
+                    'data-rating' : $item.Rating,
+                    'data-index'  : index,
+                    'id'          : "_media_"+$item.ID
+                })
+                .append($("<div></div>")
+                    .addClass("col-xs-1 col-md-1 row-status-container")
+                    .append($("<i></i>")
+                        .addClass("row-status fa")
+                    )
+                )
+                .append($("<div></div>")
+                    .addClass("col-xs-3 col-md-3 trackname")
+                    .attr({
+                        title:$item.TrackName
+                    })
+                    .append($("<span></span>")
+                        .text($item.TrackName)
+                    )
+                )
+                .append($("<div></div>")
+                    .addClass("col-xs-3 col-md-3 artistname")
+                    .attr({
+                        title:$item.ArtistName
+                    })
+                    .append($("<span></span>")
+                        .text($item.ArtistName)
+                    )
+                )
+                .append($("<div></div>")
+                    .addClass("col-xs-3 col-md-3 albumname")
+                    .attr({
+                        title:$item.AlbumName
+                    })
+                    .append($("<span></span>")
+                        .text($item.AlbumName)
+                    )
+                )
+                .append($("<div></div>")
+                    .addClass("col-xs-1 col-md-1 plays")
+                    .attr({
+                        title:$item.Plays
+                    })
+                    .append($("<span></span>")
+                        .text($item.Plays)
+                    )
+                ).appendTo($library_view_inner);
+            });
+
+            $(".item-row").each(function(){
+                $this = $(this);
+                app_vars.items.push($this.getId());
+            });
+        });
+    };
+
     var item_selected = function(items){
         var classname = get_row_classname();
         if (typeof items !== 'object'){
@@ -737,7 +798,7 @@ $(document).ready(function(){
             throw new Error('Failed to find the result row');
         }
 
-        var $preview_button = $result.find(".preview-button");
+        $preview_button = $result.find(".preview-button");
 
         console.debug(app_vars.preview);
 
@@ -761,7 +822,7 @@ $(document).ready(function(){
         app_vars.preview = {
             on : false,
             id : undefined
-        }
+        };
         console.debug("Previewing "+$result.data('href')+" using "+$result.data('engine')+" engine");
         $.ajax({
             url  : "xhr/preview_item",
@@ -790,7 +851,7 @@ $(document).ready(function(){
             id : undefined
         };
         $(".preview-button").text("Preview");
-    }
+    };
 
     var add_result_listeners = function(){
         $(".download-button").on("click",function(){
@@ -897,6 +958,21 @@ $(document).ready(function(){
     };
     // --------------------------
     // End of functions
+    // --------------------------
+    
+
+    // --------------------------
+    // Setup player
+    // --------------------------
+    
+    $("#playlist_list").slideUp();
+    $(".slider-pointer").css({'left': (player.volume * ($(".slider-line").width() - 4)) });
+    $("#library_sidebar_row").css({"background":"ghostwhite"});
+
+    set_item_objs();
+
+    console.debug("loaded "+app_vars.items.length+" items");
+
     // --------------------------
     // Event Handlers
     // --------------------------

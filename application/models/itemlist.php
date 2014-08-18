@@ -94,7 +94,12 @@ class ItemList extends CI_Model {
 	}
 
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT music.* FROM music LEFT JOIN artists ON music.ArtistID = artists.ID ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
+		$items = $this->db->query('SELECT * FROM music 
+			LEFT JOIN artists ON music.ArtistID = artists.ID 
+			LEFT JOIN albums ON music.AlbumID = albums.ID 
+			LEFT JOIN genres ON music.GenreID = genres.ID 
+			ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
+		
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();
 		if (is_array($results)){
@@ -104,11 +109,6 @@ class ItemList extends CI_Model {
 				} catch (MediaObjectException $e){
 					unset($results[$k]);
 				}
-				//print "<script>console.log('".$k." / ".count($results)." | ".$result->tags['title'][0]." - ".$result->tags['artist'][0]." (".$result->tags['year'][0].")');</script>";
-				//flush();
-				//ob_flush();
-				//ob_end_flush();
-				//ob_start();
 			};
 			array_values($results);
 			$this->_db_count = count($results);

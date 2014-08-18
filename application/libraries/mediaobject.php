@@ -9,10 +9,13 @@ class MediaObject {
 	public $ID = null;
 	public $Filename = null;
 	public $Filepath = null;
-	public $Trackname = null;
+	public $TrackName = null;
 	public $ArtistID = null;
 	public $AlbumID = null;
 	public $GenreID = null;
+	public $AlbumName = null;
+	public $ArtistName = null;
+	public $GenreName = null;
 	public $Plays = null;
 	public $FileMD5 = null;
 	public $BitRate = null;
@@ -21,8 +24,17 @@ class MediaObject {
 	public $Year = null;
 	public $SplFile = null;
 	public $id3_info = null;
-	public $tags = array();
+	public $tags = [];
 	public $CI;
+
+	private $defaults = array(
+		"ArtistName" => "-",
+		"AlbumName" => "-",
+		"GenreName" => "-",
+		"TrackName" => "-",
+		"Year" => "-",
+		"Plays" => "0"
+	); 
 
 	public function __construct(StdClass $object = null) {   
         if (!($object instanceof StdClass)){
@@ -31,7 +43,12 @@ class MediaObject {
 		$this->CI =& get_instance();
         foreach (get_object_vars($object) as $key => $value) {
             if (property_exists($this,$key)){
-	            $this->$key = $value;
+	            if (in_array($key, array_keys($this->defaults)) && empty($value)){
+	            	$this->$key = $this->defaults[$key];
+	            }
+	            else {
+		            $this->$key = $value;
+				}
 			}
         }
         if ($this->Filename !== null && file_exists($this->Filename)){
@@ -56,18 +73,18 @@ class MediaObject {
 		} else return "Unknown";
 	} 
 	
-	public function __get($property){
-		if (property_exists($property,get_class($this))){
-			return $property;
-		} else {
-			if ($property === "Artist"){
-				return $this->get_foreign($this->ArtistID,"ArtistName","artists");
-			} else if ($property === "Album"){
-				return $this->get_foreign($this->AlbumID,"AlbumName","albums"); 
-			} else if ($property === "Genre"){
-				return $this->get_foreign($this->GenreID,"GenreName","genres");
-			}
-		}
-	}
+	// public function __get($property){
+	// 	if (property_exists($property,get_class($this))){
+	// 		return $property;
+	// 	} else {
+	// 		if ($property === "Artist"){
+	// 			return $this->get_foreign($this->ArtistID,"ArtistName","artists");
+	// 		} else if ($property === "Album"){
+	// 			return $this->get_foreign($this->AlbumID,"AlbumName","albums"); 
+	// 		} else if ($property === "Genre"){
+	// 			return $this->get_foreign($this->GenreID,"GenreName","genres");
+	// 		}
+	// 	}
+	// }
 	
 }
