@@ -4,7 +4,7 @@ class Main extends CI_Controller {
 
 	public function __construct(){
 		parent::__construct();
-		$this->itemlist->initialise();
+		//$this->itemlist->initialise();
 	}
 
 	public function index(){
@@ -12,19 +12,9 @@ class Main extends CI_Controller {
 		ini_set('display_errors',1);
 		error_reporting(E_ALL);
 
-		$valid_exts = $this->config->item('allowed_exts');
-
 		$skin = $this->config->item('skin');
 
-		// Update DB (Scan for new files)
-		if (true){
-			$this->itemlist->generate_files_list();
-			$this->itemlist->write_files_to_db();
-		}
-
-		$files = array();
-		$files = $this->itemlist->get_object_list();
-		$data  = array("files"=>$files,"skin"=>$skin);
+		$data  = ["skin"=>$skin];
 
 		$this->load->view("layout/header");
 		$this->load->view("player", $data);

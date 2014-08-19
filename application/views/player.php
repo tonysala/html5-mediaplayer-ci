@@ -65,7 +65,6 @@
 			</div>
 		</div>
 		<div class="col-md-12 content <?=$skin?>">
-			<?php if (count($files)): ?>
 			<div class="row header-row <?=$skin?>">
 				<div class="col-xs-5 col-md-7 current-track-container"><span id="current_track">Playing: </span></div>
 				<div class="col-xs-7 col-md-5">
@@ -88,23 +87,7 @@
 			<div id="page_views_container">
 				<div class="row items-container pageview" id='library_view'>
 					<div class="col-md-12">
-	                <?php //foreach($files as $k => $file): ?>
-		            <!--     <div class='row item-row <?=$skin?>' draggable='true' data-rating='<?=$file->Rating?>' data-index='<?=$k?>' id='_media_<?=$file->ID?>'>
-		                    <div class="col-xs-1 col-md-1 row-status-container"><i class="row-status fa"></i></div>
-		                    <div class="col-xs-3 col-md-3 trackname" title="<?=$file->Trackname?>">
-								<span><?=$file->Trackname?></span>
-							</div>
-							<div class="col-xs-3 col-md-3 artistname" title="<?=$file->Artist?>">
-								<span><?=$file->Artist?></span>
-							</div>
-							<div class="col-xs-3 col-md-3 albumname" title="<?=$file->Album?>">
-								<span><?=$file->Album?></span>
-							</div>
-							<div class="col-xs-1 col-md-1 plays" title="<?=$file->Plays?> Plays">
-								<span><?=$file->Plays?></span>
-							</div>
-		                </div> -->
-	                <?php //endforeach; ?>
+
 	                </div>
 	            </div>
 	            <div class="row pageview" id="downloads_view">
@@ -118,9 +101,6 @@
 					</div>
 	            </div>
 	        </div>
-            <?php else: ?>
-				<h1>No music found :(</h1>
-            <?php endif; ?>
 		</div>
 	</div>
 </div>
@@ -139,11 +119,11 @@
     <li id='edit_id3'><a tabindex="-1">Edit ID3 Tags</a></li>
     <li id='rate'><a tabindex="-1">Rate
 		<div id="rating_container" style='display:inline-block'>
-			<i class="fa fa-star<?=$file->Rating >= 1 ? '' : '-o'?> rating"></i>
-			<i class="fa fa-star<?=$file->Rating >= 2 ? '' : '-o'?> rating"></i>
-			<i class="fa fa-star<?=$file->Rating >= 3 ? '' : '-o'?> rating"></i>
-			<i class="fa fa-star<?=$file->Rating >= 4 ? '' : '-o'?> rating"></i>
-			<i class="fa fa-star<?=$file->Rating >= 5 ? '' : '-o'?> rating"></i>
+			<i class="fa fa-star-o rating"></i>
+			<i class="fa fa-star-o rating"></i>
+			<i class="fa fa-star-o rating"></i>
+			<i class="fa fa-star-o rating"></i>
+			<i class="fa fa-star-o rating"></i>
 		</div>
     </a></li>
     <li class="divider"></li>
