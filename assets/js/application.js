@@ -78,6 +78,7 @@ $(document).ready(function(){
                     this.url()
                 );
                 load_cover_art();
+                return this;
             },
             pause: function(){
                 // get the current element
@@ -97,23 +98,27 @@ $(document).ready(function(){
                 elements.$track_pointer.stop(true);
                 // set status to 0 (paused/stopped)
                 app_vars.status = 0;
+                return this;
             },
             click: function(){
                 var $ele = opts.$element;
                 app_vars.selected = [opts.ID];
                 // if we clicked the current playing item, pause the player
                 if (app_vars.current === opts.ID && app_vars.status === 1){
-                    media_objects[app_vars.current].pause();
+                    this.pause();
                 // if we clicked the current paused item resume the player
                 } else if (app_vars.current === opts.ID){
                     resume_item();
                 // else load the new item
                 } else {
-                    media_objects[opts.ID].play();
+                    this.play();
                 }
                 // scroll the element into view
-                $ele.scrollIntoView();
-                return true;
+                this.show();
+                return this;
+            },
+            show: function(){
+                opts.$element.scrollIntoView();
             }
         };
     };
@@ -421,11 +426,7 @@ $(document).ready(function(){
             next = app_vars.queue.shift();
             update_queue_count();
             $(".queue").find(".queue-itemcount").text("("+app_vars.queue.length+")");
-            $element = $("#_media_"+next);
-            item_id = app_vars.item_ids[next];
-            media_objects[item_id].click();
-            // title = item_clicked(item_id);
-            $element.scrollIntoView();
+            media_objects[item_id].click().show();
         }
         // check if repeat is set
         else if (app_vars.loop === true){
@@ -454,10 +455,7 @@ $(document).ready(function(){
                     item_id = get_first_id_in_order();
                 }
                 console.debug("next item id : "+item_id);
-                $element = get_item_element_by_id(item_id);
-                media_objects[item_id].click();
-                // item_clicked(item_id);
-                $element.scrollIntoView();
+                media_objects[item_id].click().show();
             }
             // get random next item
             else {
@@ -470,10 +468,7 @@ $(document).ready(function(){
                         // Add to player history
                         app_vars.history.items.push(next);
                         app_vars.history.pointer++;
-                        media_objects[next].click();
-                        // title = item_clicked(next);
-                        $element = get_item_element_by_id(next);
-                        $element.scrollIntoView();
+                        media_objects[next].click().show();
                         console.debug("POINTER:"+app_vars.history.pointer);
                         console.debug(app_vars.history.items);
                     }
