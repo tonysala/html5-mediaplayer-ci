@@ -154,6 +154,7 @@ $(document).ready(function(){
                 }
                 // media_objects[$item.ID].url();
             });
+            $("#library_item_count").text("("+app_vars.item_ids.length+")");
             add_item_row_listeners();
         });
     };
@@ -1197,7 +1198,6 @@ $(document).ready(function(){
     $("#playlist_list").slideUp();
     $(".slider-pointer").css({'left': (player.volume * ($(".slider-line").width() - 4)) });
     $("#library_sidebar_row").css({"background":"ghostwhite"});
-	$("#library_item_count").text("("+app_vars.item_ids.length+")");
 
     set_item_objs();
     set_playlists();
