@@ -44,7 +44,7 @@
 				</div>
 				<div class="sidebar-row" id='library_sidebar_row'>
 					<span>LIBRARY</span>
-					<span style='text-align:right;' class='library-item-count'>(<?=count($files)?>)</span>
+					<span style='text-align:right;' id='library_item_count'>(0)</span>
 				</div>
 				<div class="sidebar-row" id='find_new_sidebar_row'>
 					<span>FIND NEW MUSIC</span>
