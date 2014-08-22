@@ -37,7 +37,7 @@ class Fetcher {
 			$fileinfo = new SplFileInfo($filename);
 			//$fileinfo = $fileinfo->getFileInfo();
 			if ($fileinfo instanceof SplFileInfo){
-				return $this->CI->itemlist->write_files_to_db(array($fileinfo));
+				return $this->CI->itemlist->write_files_to_db([$fileinfo]);
 			}
 		}
 	}
@@ -56,7 +56,7 @@ abstract class Engine {
 	protected $_dom;
 	protected $_xpath;
 	public $previous_progress = 0;
-	protected $audio_formats = array("mp3","flac","aac","ogg");
+	protected $audio_formats = ["mp3","flac","aac","ogg"];
 
 	public function __construct(){
 		$this->_dom = new DOMDocument;
@@ -85,10 +85,10 @@ abstract class Engine {
 	    flush();
 		@ob_flush();
 	    if ($progress > $this->previous_progress){
-	        print "|".json_encode(array(
+	        print "|".json_encode([
 				"progress" => (string)$progress,
 				"error" => false
-			));
+			]);
 	        $this->previous_progress = $progress;
 	    }
 	}
@@ -240,7 +240,7 @@ class Mp3li extends Engine {
 					exit;
 				}
 				else if ($this->previous_progress === 0){
-					print json_encode(array('error'=>true,'message'=>'download not started'));
+					print json_encode(array('error'=>true,'message'=>'download could not start'));
 					exit;
 				}
 				else {

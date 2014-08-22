@@ -80,7 +80,12 @@ class ItemList extends CI_Model {
 	}
 
 	public function get_item($id){
-		$row = $this->db->query("SELECT * FROM `music` WHERE `ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
+		$row = $this->db->query("SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName
+		FROM music
+			LEFT JOIN artists ON music.ArtistID = artists.ID
+			LEFT JOIN albums ON music.AlbumID = albums.ID
+			LEFT JOIN genres ON music.GenreID = genres.ID
+		WHERE `music.ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
 		if (empty($row)){
 			return false;
 		}
@@ -94,13 +99,13 @@ class ItemList extends CI_Model {
 	}
 
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName 
-		FROM music  
-			LEFT JOIN artists ON music.ArtistID = artists.ID  
-			LEFT JOIN albums ON music.AlbumID = albums.ID  
-			LEFT JOIN genres ON music.GenreID = genres.ID  
+		$items = $this->db->query('SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName
+		FROM music
+			LEFT JOIN artists ON music.ArtistID = artists.ID
+			LEFT JOIN albums ON music.AlbumID = albums.ID
+			LEFT JOIN genres ON music.GenreID = genres.ID
 		ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
-		
+
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();
 		if (is_array($results)){
@@ -127,10 +132,13 @@ class ItemList extends CI_Model {
 			}
 			$files = $this->_files;
 		}
-		$result = $count = 0;
+		$result = [];
+		$count = 0;
 		foreach ($files as $file){
 			$realpath = $file->getRealPath();
 			$tags = $this->get_id3_tags($file);
+			//print "|".json_encode($tags);
+			//exit;
 			$sql = array();
 			if (isset($tags['artist'][0])){
 				$artist = $this->check_foreign($tags['artist'][0],'ArtistName','artists');
@@ -161,7 +169,7 @@ class ItemList extends CI_Model {
 					. "Filename = ".$filename
 					. $sql
 				);
-				$result = $result + 1;
+				$result[] = $this->db->insert_id();
 			} else {
 				$this->db->query("UPDATE music SET "
 					. "Filename=".$filename

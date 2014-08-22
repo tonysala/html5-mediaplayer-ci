@@ -8,7 +8,6 @@ class Main extends CI_Controller {
 	}
 
 	public function index(){
-
 		ini_set('display_errors',1);
 		error_reporting(E_ALL);
 
@@ -19,8 +18,6 @@ class Main extends CI_Controller {
 		$this->load->view("layout/header");
 		$this->load->view("player", $data);
 		$this->load->view("layout/footer");
-
-
 	}
 
 	public function setup(){

@@ -42,7 +42,8 @@ $(document).ready(function(){
         $control_playpause : $("#control_playpause"),
         $control_next      : $("#control_next"),
         $control_prev      : $("#control_prev"),
-        $library_view      : $("#library_view")
+        $library_view      : $("#library_view"),
+        $library_view_inner: $("#library_view").find("div")
     };
 
     // Cache the player element...
@@ -145,21 +146,13 @@ $(document).ready(function(){
             type: "get"
         })
         .done(function(items){
-            var $library_view_inner = elements.$library_view.find("div");
             $.each(items,function(index,$item){
                 // var $item = $(this);
-                console.log($item);
-                $element = add_item_to_library($item, index);
-                if ($element !== undefined){
-                    $element.appendTo($library_view_inner);
-                    app_vars.item_ids.push($item.ID);
-                    // Add a hard link to the jQuery element to the item object
-                    $item.$element = $element;
-                    media_objects[$item.ID] = MediaObject($item);
-                }
+                //console.log($item);
+                add_item_to_library($item, index);
                 // media_objects[$item.ID].url();
             });
-            $("#library_item_count").text("("+app_vars.item_ids.length+")");
+            update_library_count();
             add_item_row_listeners();
         });
     };
@@ -168,56 +161,61 @@ $(document).ready(function(){
         if ($item.ID === undefined || $item.ID === null){
             return undefined;
         }
-        return $("<div></div>")
-        .addClass("row item-row")
-        .attr({
-            'draggable'   : true,
-            'data-rating' : $item.Rating,
-            'data-index'  : index,
-            'id'          : "_media_"+$item.ID
-        })
-        .append($("<div></div>")
-            .addClass("col-xs-1 col-md-1 row-status-container")
-            .append($("<i></i>")
-                .addClass("row-status fa")
-            )
-        )
-        .append($("<div></div>")
-            .addClass("col-xs-3 col-md-3 trackname")
-            .attr({
-                title:$item.TrackName
-            })
-            .append($("<span></span>")
-                .text($item.TrackName)
-            )
-        )
-        .append($("<div></div>")
-            .addClass("col-xs-3 col-md-3 artistname")
-            .attr({
-                title:$item.ArtistName
-            })
-            .append($("<span></span>")
-                .text($item.ArtistName)
-            )
-        )
-        .append($("<div></div>")
-            .addClass("col-xs-3 col-md-3 albumname")
-            .attr({
-                title:$item.AlbumName
-            })
-            .append($("<span></span>")
-                .text($item.AlbumName)
-            )
-        )
-        .append($("<div></div>")
-            .addClass("col-xs-1 col-md-1 plays")
-            .attr({
-                title:$item.Plays
-            })
-            .append($("<span></span>")
-                .text($item.Plays)
-            )
-        );
+        $element = $("<div></div>")
+			.addClass("row item-row")
+			.attr({
+				'draggable'   : true,
+				'data-rating' : $item.Rating,
+				'data-index'  : index,
+				'id'          : "_media_"+$item.ID
+			})
+			.append($("<div></div>")
+				.addClass("col-xs-1 col-md-1 row-status-container")
+				.append($("<i></i>")
+					.addClass("row-status fa")
+				)
+			)
+			.append($("<div></div>")
+				.addClass("col-xs-3 col-md-3 trackname")
+				.attr({
+					title:$item.TrackName
+				})
+				.append($("<span></span>")
+					.text($item.TrackName)
+				)
+			)
+			.append($("<div></div>")
+				.addClass("col-xs-3 col-md-3 artistname")
+				.attr({
+					title:$item.ArtistName
+				})
+				.append($("<span></span>")
+					.text($item.ArtistName)
+				)
+			)
+			.append($("<div></div>")
+				.addClass("col-xs-3 col-md-3 albumname")
+				.attr({
+					title:$item.AlbumName
+				})
+				.append($("<span></span>")
+					.text($item.AlbumName)
+				)
+			)
+			.append($("<div></div>")
+				.addClass("col-xs-1 col-md-1 plays")
+				.attr({
+					title:$item.Plays
+				})
+				.append($("<span></span>")
+					.text($item.Plays)
+				)
+			)
+        .appendTo(elements.$library_view_inner);
+		app_vars.item_ids.push($item.ID);
+		// Add a hard link to the jQuery element to the item object
+		$item.$element = $element;
+		media_objects[$item.ID] = MediaObject($item);
     };
 
     var set_playlists = function(){
@@ -650,6 +648,10 @@ $(document).ready(function(){
         .find(".playlist-item-count").text("("+app_vars.playlists[playlist].length+")");
     };
 
+	var update_library_count = function(){
+		$("#library_item_count").text("("+app_vars.item_ids.length+")");
+	}
+
     var sort_items = function(by, asc){
         var $items = $(".item-row");
         var $item_container = $(".items-container");
@@ -807,6 +809,11 @@ $(document).ready(function(){
 					if (json_response.error === true){
 						message = json_response.message;
 					}
+					else {
+						console.log(json_response);
+						add_item_to_library(json_response.inserted,Object.keys(media_objects).length);
+						update_library_count();
+					}
 				}
 				else {
 					message = 'malformed data recieved';
@@ -819,6 +826,12 @@ $(document).ready(function(){
 					.css({"line-height": "7px"})
 				);
 				$download_button.prop('disabled',true);
+				$result_button.html("")
+				.append($('<i></i>')
+					.addClass('fa fa-check')
+					.css({"line-height": "7px"})
+				);
+				$result_button.prop('disabled',true);
 			}
 			else {
 				$result_button.html("")
@@ -1027,12 +1040,12 @@ $(document).ready(function(){
     };
 
     var add_item_row_listeners = function(){
-        $(".item-row")
-        .on("dblclick",function(){
+        $("#library_view")
+        .on("dblclick",".item-row",function(){
             media_objects[$(this).getId()].click();
             // item_clicked($(this).getId());
         })
-        .on("mouseup",function(event){
+        .on("mouseup",".item-row",function(event){
             var menu_on = ($("#contextmenu").css("display") !== "none");
             var $row = $(this);
             // right click (open/close menu)
@@ -1118,22 +1131,15 @@ $(document).ready(function(){
                 app_vars.contextbox = false;
             }
         })
-        .on("dragstart",function(e){
+        .on("dragstart",".item-row",function(e){
             if ($(this).hasClass("selected-row")){
                 app_vars.moving = app_vars.selected;
             } else {
                 app_vars.moving = [$(this).getId()];
             }
         })
-        .on("dragend",function(e){
+        .on("dragend",".item-row",function(e){
             //console.debug(e);
-        });
-
-        $(".result-row").on("mouseup",function(){
-
-        })
-        .on("dblclick",function(){
-            item_selected($(this).getId());
         });
     };
 
