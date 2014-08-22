@@ -56,7 +56,7 @@ class Xhr extends CI_Controller {
 			$item = $this->itemlist->get_item($id);
 			$search_term = $item->Artist." ".$item->Album." ".$item->Year." album cover";
 			if (!$url = $this->_get_google_img($search_term)){
-				$url = "http://player/assets/images/album-placeholder.png";
+				$url = "/assets/images/album-placeholder.png";
 			}
 			print json_encode(array("error"=>false,"url"=>$url));
 		} else {
