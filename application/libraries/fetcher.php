@@ -230,8 +230,8 @@ class Mp3li extends Engine {
 				$downloaded = curl_getinfo($ch,CURLINFO_SIZE_DOWNLOAD);
 				curl_close($ch);
 				if ($downloaded !== -1 && $downloaded < $filesize){
-					log_message('error','download interrupted '.curl_getinfo($ch,CURLINFO_SIZE_DOWNLOAD).'/'.curl_getinfo($ch,CURLINFO_CONTENT_LENGTH_DOWNLOAD));
-					unlink($filename);
+					log_message('error','download interrupted '.$downloaded.'/'.$filesize);
+					@unlink($filename);
 					print json_encode(array('error'=>true,'message'=>'download interrupted'));
 					exit;
 				}

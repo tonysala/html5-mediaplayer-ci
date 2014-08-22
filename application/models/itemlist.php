@@ -85,7 +85,7 @@ class ItemList extends CI_Model {
 			LEFT JOIN artists ON music.ArtistID = artists.ID
 			LEFT JOIN albums ON music.AlbumID = albums.ID
 			LEFT JOIN genres ON music.GenreID = genres.ID
-		WHERE `music.ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
+		WHERE `music`.`ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
 		if (empty($row)){
 			return false;
 		}
