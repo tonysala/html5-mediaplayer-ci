@@ -207,11 +207,13 @@ class Mp3li extends Engine {
 				print '|'.json_encode(array('error'=>true,'message'=>'unknown content type ('.$fileinfo['content_type'].')'));
 				exit;
 			} else {
-				$title = preg_replace('/[^\s\&\'\(\)a-zA-Z0-9\-_]+/','-',$title);
+				$title = preg_replace('/[^a-z0-9_]+/i','-',$title);
+				if (!strlen($title)){
+					$title = time();
+				}
 				$filename = "/var/www/player/tracks/".$title.".mp3";
 				if (file_exists($filename)){
-					print '|'.json_encode(array('error'=>true,'message'=>'already downloaded'));
-					exit;
+					@unlink($filename);
 				}
 				$target = fopen($filename, 'w');
 				if ($fileinfo['content_type'] !== "audio/mpeg"){
@@ -240,12 +242,20 @@ class Mp3li extends Engine {
 					exit;
 				}
 				else if ($this->previous_progress === 0){
+					@unlink($filename);
 					print json_encode(array('error'=>true,'message'=>'download could not start'));
 					exit;
 				}
 				else {
-					chmod($filename,777);
-					return $filename;
+					chmod($filename,0666);
+					$md5 = md5_file($filename);
+					$filepath = "/var/www/player/tracks/".$md5.".mp3";
+					if (file_exists($filepath)){
+						print json_encode(['error'=>true,'message'=>'already downloaded']);
+						exit;
+					}
+					rename($filename,$filepath);
+					return $filepath;
 				}
 			}
 		}

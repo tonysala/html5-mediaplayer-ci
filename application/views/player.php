@@ -108,7 +108,7 @@
     <source src='' type='audio/mpeg'>
 </audio>
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-    <li id='add_to_playlist'><a tabindex="-1" id="to_playlist">Add to Playlist &gt;</a></li>
+    <li id='add_to_playlist'><a tabindex="-1" id="to_playlist">Add to Playlist&nbsp;&nbsp;&nbsp;<i class='fa fa-caret-down'></i></a></li>
     <ul class='dropdown-menu' id='playlist_list'>
 		<li><a tabindex="-1" class="hidden-list-item">Work Playlist</a></li>
 		<li><a tabindex="-1" class="hidden-list-item">Home Playlist</a></li>
@@ -116,7 +116,7 @@
 		<li class="divider"></li>
     </ul>
     <li id='add_to_queue'><a tabindex="-1">Add to Queue</a></li>
-    <li id='edit_id3'><a tabindex="-1">Edit ID3 Tags</a></li>
+    <li id='edit_tags'><a tabindex="-1">Edit Tags</a></li>
     <li id='rate'><a tabindex="-1">Rate
 		<div id="rating_container" style='display:inline-block'>
 			<i class="fa fa-star-o rating"></i>
@@ -129,4 +129,43 @@
     <li class="divider"></li>
     <li id='delete_item'><a tabindex="-1">Delete from Library</a></li>
 </ul>
+
+<div class="modal fade" id="id3_modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<h4 class="modal-title">Edit Item Attributes <span id="selected_for_edit_count"></span></h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-xs-6">
+						<span>Track:</span>
+						<input type="text" class="form-control" placeholder="track" id="track_edit"/>
+						<br>
+						<span>Album:</span>
+						<input type="text" class="form-control" placeholder="album" id="album_edit"/>
+						<br>
+						<span>Genre:</span>
+						<input type="text" class="form-control" placeholder="genre" id="genre_edit"/>
+						<br>
+					</div>
+					<div class="col-xs-6">
+						<span>Artist:</span>
+						<input type="text" class="form-control" placeholder="artist" id="artist_edit"/>
+						<br>
+						<span>Year Released:</span>
+						<input type="text" class="form-control" placeholder="year" id="year_edit"/>
+						<br>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button typy="button" class="btn btn-default" id="identify_button">Identify (Beta)</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 

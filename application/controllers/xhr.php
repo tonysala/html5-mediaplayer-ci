@@ -8,12 +8,34 @@ class Xhr extends CI_Controller {
 	public function __construct(){
 		parent::__construct();
 		$this->itemlist->initialise();
-		//header("Content-Type: application/json");
+	}
+
+	private function set_json_out(){
+		header("Content-Type: application/json");
 	}
 
 	public function index(){
 		header("HTTP/1.1 401 Unauthorized");
 		exit;
+	}
+
+	public function edit_tags(){
+		$post = $this->input->post();
+		$this->set_json_out();
+		$changes = $this->itemlist->write_tags($post);
+		if (!empty($changes)){
+			print json_encode(['error'=>false,'updated'=>$changes]);
+		}
+		else {
+			print json_encode(['error'=>true,'message'=>'error occured updating record']);
+		}
+		exit;
+	}
+
+	public function scan_dir(){
+		$this->set_json_out();
+		$this->itemlist->full_scan_and_write();
+		print json_encode("done");
 	}
 
 	public function get_url(){
@@ -54,13 +76,18 @@ class Xhr extends CI_Controller {
 	public function get_cover_art(){
 		if ($id = $this->input->get("id")){
 			$item = $this->itemlist->get_item($id);
-			$search_term = $item->Artist." ".$item->Album." ".$item->Year." album cover";
-			if (!$url = $this->_get_google_img($search_term)){
-				$url = "/assets/images/album-placeholder.png";
+			if (!empty($item->Artist) && !empty($item->Album)){
+				$search_term = $item->Artist." ".$item->Album." ".$item->Year." album cover";
+				if (!$url = $this->_get_google_img($search_term)){
+					$url = "/assets/images/album-placeholder.png";
+				}
+				print json_encode(array("error"=>false,"url"=>$url));
 			}
-			print json_encode(array("error"=>false,"url"=>$url));
+			else {
+				print json_encode(array("error"=>true,"message"=>"not enough info available"));
+			}
 		} else {
-			print json_encode(array("error"=>true));
+			print json_encode(array("error"=>true,"message"=>"no ID given"));
 		}
 	}
 
@@ -72,8 +99,6 @@ class Xhr extends CI_Controller {
 				$id = $this->db->escape($id);
 			}
 			$ids = implode(",",$ids);
-			print json_encode(array("ids"=>"UPDATE music SET Rating = ".$rating." WHERE ID IN (".$ids.");"));
-			exit;
 			$result = $this->db->query("UPDATE music SET Rating = ".$rating." WHERE ID IN (".$ids.");");
 			if ($result === true){
 				print json_encode(array("error"=>false));

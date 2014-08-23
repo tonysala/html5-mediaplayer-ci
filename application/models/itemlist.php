@@ -18,6 +18,12 @@ class ItemList extends CI_Model {
 		$this->load_db_objects();
 	}
 
+	public function full_scan_and_write(){
+		$this->initialise();
+		$this->generate_files_list();
+		$this->write_files_to_db(null,true);
+	}
+
 	public function set_watch_paths($paths = array()){
 		if (is_array($paths)){
 			$this->_paths = $paths;
@@ -59,6 +65,43 @@ class ItemList extends CI_Model {
 			$tags = array_pop($id3_info->info['tags']);
 		}
 		return $tags;
+	}
+
+	public function write_tags($post){
+		$return = [];
+		$sql = "UPDATE music SET ";
+		$sql_section = [];
+		if (isset($post['track']) && !empty($post['track'])){
+			$sql_section[] = " TrackName = ".$this->db->escape($post['track'])." ";
+			$return['track'] = $post['track'];
+		}
+		if (isset($post['year']) && !empty($post['year'])){
+			$sql_section[] = " Year = ".$this->db->escape($post['year'])." ";
+			$return['year'] = $post['year'];
+		}
+		if (isset($post['artist']) && !empty($post['artist'])){
+			$artist = $this->check_foreign($post['artist'],'ArtistName','artists');
+			$sql_section[] = " ArtistID = ".$this->db->escape($artist)." ";
+			$return['artist'] = $post['artist'];
+			$return['artistID'] = $artist;
+		}
+		if (isset($post['album']) && !empty($post['album'])){
+			$album = $this->check_foreign($post['album'],'AlbumName','albums');
+			$sql_section[] = " AlbumID = ".$this->db->escape($album)." ";
+			$return['album'] = $post['album'];
+			$return['albumID'] = $album;
+		}
+		if (isset($post['genre']) && !empty($post['genre'])){
+			$genre = $this->check_foreign($post['genre'],'GenreName','genres');
+			$sql_section[] = " GenreID = ".$this->db->escape($genre)." ";
+			$return['genre'] = $post['genre'];
+			$return['genreID'] = $genre;
+		}
+		$sql .= implode(",",$sql_section);
+		$sql .= " WHERE ID IN (".$this->db->escape(implode(",",$post['id'])).");";
+
+		$this->db->query($sql);
+		return $return;
 	}
 
 	public function get_list_as_links(){

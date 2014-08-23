@@ -102,13 +102,13 @@ $(document).ready(function(){
                 return this;
             },
             click: function(){
-                var $ele = opts.$element;
+                //var $ele = opts.$element;
                 app_vars.selected = [opts.ID];
                 // if we clicked the current playing item, pause the player
-                if (app_vars.current === opts.ID && app_vars.status === 1){
+                if (parseInt(app_vars.current) === parseInt(opts.ID) && app_vars.status === 1){
                     this.pause();
                 // if we clicked the current paused item resume the player
-                } else if (app_vars.current === opts.ID){
+                } else if (parseInt(app_vars.current) === parseInt(opts.ID)){
                     resume_item();
                 // else load the new item
                 } else {
@@ -120,7 +120,42 @@ $(document).ready(function(){
             },
             show: function(){
                 opts.$element.scrollIntoView();
-            }
+            },
+            edit: function(changes){
+				if (typeof changes.track !== "undefined"){
+					opts.TrackName = changes.track;
+					opts.$element.find('.trackname')
+						.text(changes.track)
+						.attr({
+							title : changes.track
+						});
+				}
+				if (typeof changes.artist !== "undefined"){
+					opts.ArtistName = changes.artist;
+					opts.ArtistID = changes.artistID;
+					opts.$element.find('.artistname')
+						.text(changes.artist)
+						.attr({
+							title : changes.artist
+						});
+				}
+				if (typeof changes.album !== "undefined"){
+					opts.AlbumName = changes.album;
+					opts.AlbumID = changes.albumID;
+					opts.$element.find('.albumname')
+						.text(changes.album)
+						.attr({
+							title : changes.album
+						});
+				}
+				if (typeof changes.year !== "undefined"){
+					opts.Year = changes.year;
+				}
+				if (typeof changes.genre !== "undefined"){
+					opts.GenreName = changes.genre;
+					opts.GenreID = changes.genreID;
+				}
+			}
         };
     };
 
@@ -424,7 +459,7 @@ $(document).ready(function(){
             next = app_vars.queue.shift();
             update_queue_count();
             $(".queue").find(".queue-itemcount").text("("+app_vars.queue.length+")");
-            media_objects[item_id].click().show();
+            media_objects[item_id].play().show();
         }
         // check if repeat is set
         else if (app_vars.loop === true){
@@ -453,7 +488,7 @@ $(document).ready(function(){
                     item_id = get_first_id_in_order();
                 }
                 console.debug("next item id : "+item_id);
-                media_objects[item_id].click().show();
+                media_objects[item_id].play().show();
             }
             // get random next item
             else {
@@ -466,7 +501,7 @@ $(document).ready(function(){
                         // Add to player history
                         app_vars.history.items.push(next);
                         app_vars.history.pointer++;
-                        media_objects[next].click().show();
+                        media_objects[next].play().show();
                         console.debug("POINTER:"+app_vars.history.pointer);
                         console.debug(app_vars.history.items);
                     }
@@ -479,7 +514,7 @@ $(document).ready(function(){
         var next_id;
         if (app_vars.current === undefined){
             next_id = get_first_id_in_order();
-            media_objects[next_id].click();
+            media_objects[next_id].play();
             // item_clicked(get_first_id_in_order());
             return;
         }
@@ -495,7 +530,7 @@ $(document).ready(function(){
                 } else {
                     next_id = app_vars.item_ids[app_vars.item_ids.length - 1];
                 }
-                media_objects[next_id].click();
+                media_objects[next_id].play();
                 // item_clicked(next_id);
             } else {
                 console.debug("POINTER:"+app_vars.history.pointer);
@@ -503,7 +538,7 @@ $(document).ready(function(){
                 if (app_vars.history.pointer > 0 && app_vars.history.items[app_vars.history.pointer] !== app_vars.current){
                     app_vars.history.pointer--;
                     next_id = app_vars.history.items[app_vars.history.pointer];
-                    media_objects[next_id].click();
+                    media_objects[next_id].play();
                     // item_clicked(next_id);
                 } else {
                     if (app_vars.history.pointer === 0 && app_vars.history.items.length > 0){
@@ -615,6 +650,7 @@ $(document).ready(function(){
     };
 
     var switch_view = function(to, callback, $menuitem){
+        hide_menu();
         if (app_vars.current_view !== to){
             //$(".item-row").hide();
             if (typeof callback === "function"){
@@ -707,9 +743,9 @@ $(document).ready(function(){
         if (!$download.length){
             // Detach this item (maybe we should clone it?) and add it to the downloads view
             $download = $result.clone(true,true)
-                .prependTo("#downloads_view > div")
                 .addClass("download-row")
-                .removeClass("result-row");
+                .removeClass("result-row")
+            .prependTo("#downloads_view > div");
 
             // remove the preview button
             $download.find(".preview-button")
@@ -717,6 +753,7 @@ $(document).ready(function(){
         }
 
         if (!$download.length){
+            console.log($download);
             throw new Error('Failed to find the download row');
         }
         console.log($download);
@@ -1214,16 +1251,97 @@ $(document).ready(function(){
         return false;
     });
 
-    $("#contextmenu li").on("click",function(e){
-        if ($(e.target).closest("li").data().id === 1){
+    $("#contextmenu").on("click","li",function(e){
+        $this = $(this);
+        console.log($this,$this.attr('id'));
+        if ($this.attr('id') === 'add_to_playlist'){
             if ($("#playlist_list").css("display") !== "none"){
                 $("#playlist_list").slideUp(300);
             } else {
                 $("#playlist_list").slideDown(300);
             }
         }
+        else if ($this.attr('id') === 'edit_tags'){
+			hide_menu();
+			$("#edit_tags_confirm").text("Save changes");
+			$("#selected_for_edit_count").text("("+app_vars.selected.length+") selected");
+			if (app_vars.selected.length === 1){
+				var obj = media_objects[app_vars.selected[0]].opts;
+				console.log(obj);
+				$("#track_edit").val(obj.TrackName).prop({disabled:false});
+				$("#artist_edit").val(obj.ArtistName);
+				$("#album_edit").val(obj.AlbumName);
+				$("#year_edit").val(obj.Year);
+				$("#genre_edit").val(obj.GenreName);
+			}
+			else {
+				$("#track_edit").val('').prop({disabled:true});
+				$("#artist_edit").val('');
+				$("#album_edit").val('');
+				$("#year_edit").val('');
+				$("#genre_edit").val('');
+			}
+			if (app_vars.selected.length === 0){
+				throw new Error('cannot show edit tags page when no item has been selected');
+			}
+			else {
+				$("#id3_modal").modal({});
+			}
+		}
     });
     // End ContextMenu Code
+
+	// Edit tags code
+	$("#edit_tags_confirm").on("click", function(){
+		$button = $(this);
+		$button.text("loading...");
+		var sel = app_vars.selected;
+		var data = {
+			id : sel
+		};
+		if ($("#track_edit").val() !== ""){
+			data.track = $("#track_edit").val();
+		}
+		if ($("#artist_edit").val() !== ""){
+			data.artist = $("#artist_edit").val();
+		}
+		if ($("#album_edit").val() !== ""){
+			data.album = $("#album_edit").val();
+		}
+		if ($("#year_edit").val() !== ""){
+			data.year = $("#year_edit").val();
+		}
+		if ($("#genre_edit").val() !== ""){
+			data.genre = $("#genre_edit").val();
+		}
+		if (Object.keys(data).length === 0){
+			alert("No data to change");
+			return;
+		}
+		$.ajax({
+			url  : "xhr/edit_tags",
+			data : data,
+			type : "post"
+		})
+		.done(function(data){
+			console.log(data);
+			if (data.error === false){
+				$("#id3_modal").modal('hide');
+				for (var c = 0; c < sel.length; c++){
+					media_objects[sel[c]].edit(data.updated);
+				}
+			}
+			else {
+				console.warn('Error - '+data.message);
+				$button.text("Failed, Retry");
+			}
+		})
+		.fail(function(e){
+			$button.text("Failed, Retry");
+			console.warn(e);
+		});
+	});
+	// End Edit tags code
 
     // Search code
     $("#item_filter").on("keyup",function(e){
@@ -1424,17 +1542,14 @@ $(document).ready(function(){
     .on("click",function(e){
         var rating = parseInt($(this).index() + 1);
         var $row, id = [];
-        if (app_vars.selected.length > 1){
-            for (var c = 0; c < app_vars.selected.length; c++){
-                $row = $("#_media_"+app_vars.selected[c]);
-                id.push(app_vars.item_ids[$row.getId()]);
-                $row.data().rating = rating;
-            }
-        } else {
-            $row   = $("#_media_"+app_vars.selected[0]);
-            id     = [app_vars.item_ids[$row.getId()]];
-            $row.data().rating = rating;
-        }
+        if (app_vars.selected.length < 1){
+			throw new Error('One or more items need to be selected to set rating.');
+		}
+		for (var c = 0; c < app_vars.selected.length; c++){
+			$row = $("#_media_"+app_vars.selected[c]);
+			id.push(app_vars.selected[c]);
+			$row.data().rating = rating;
+		}
         $.ajax({
             url : "/xhr/set_rating",
             data: {
