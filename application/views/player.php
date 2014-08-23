@@ -13,10 +13,14 @@
                 <button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-random"></i></button>
                 <button type="button" class="btn btn-default" id="loop" title='Play on Repeat!'><i class="fa fa-refresh"></i></button>
                 <button type="button" class="btn btn-default" id="settings" title='Fiddle with the knobs!'><i class="fa fa fa-gear"></i></button>
+                <button class="btn btn-default" id="create_playlist_button" title="create a playlist">
+					<span>Create Playlist</span>
+                </button>
             </div>
             <div class='slider-line'>
 				<div class='slider-pointer'></div>
             </div>
+
             <i class="fa fa-volume-up" id="volume_icon"></i>
 <!--
             <div class="btn-group toolbar_buttons">
@@ -129,13 +133,12 @@
     <li class="divider"></li>
     <li id='delete_item'><a tabindex="-1">Delete from Library</a></li>
 </ul>
-
 <div class="modal fade" id="id3_modal">
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-				<h4 class="modal-title">Edit Item Attributes <span id="selected_for_edit_count"></span></h4>
+				<h4 class="modal-title">Edit <span id="selected_for_edit_count"></span> Item(s)</h4>
 			</div>
 			<div class="modal-body">
 				<div class="row">
@@ -165,7 +168,24 @@
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
 			</div>
-		</div><!-- /.modal-content -->
-	</div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="playlist_name_modal">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<h4 class="modal-title">Name your playlist</h4>
+			</div>
+			<div class="modal-body">
+				<span>Playlist Name:</span>
+				<input type="text" id="playlist_name_field" class="form-control"/>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary" id="playlist_name_confirm">Save playlist</button>
+			</div>
+		</div>
+	</div>
+</div>

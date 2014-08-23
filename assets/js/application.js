@@ -262,26 +262,59 @@ $(document).ready(function(){
         .done(function(items){
             $.each(items,function(index,value){
                 app_vars.playlists[index.toLowerCase()] = value;
-                $("<div></div>")
-                    .addClass("sidebar-row playlist")
-                    .attr({
-                        "data-playlistname":index.toLowerCase()
-                    })
-                    .append($("<span></span>")
-                        .text(index.toUpperCase()+" PLAYLIST")
-                    )
-                    .append($("<span></span>")
-                        .addClass("playlist-item-count")
-                        .css({
-                            "text-align":"right"
-                        })
-                        .text(" ("+value.length+")")
-                    )
-                .insertAfter($("#queue_sidebar_row"));
+                create_playlist_link(index,value);
             });
             add_playlist_listeners();
         });
     };
+
+	var create_playlist = function(playlist_name,items,callback){
+		if (playlist_name.length){
+			if (typeof app_vars.playlists[playlist_name] === 'undefined'){
+				$.ajax({
+					url : "xhr/add_playlist",
+					data: {
+						name  : playlist_name,
+						items : JSON.stringify(items)
+					},
+					type: "get"
+				})
+				.done(function(data){
+					app_vars.playlists[playlist_name] = items;
+					create_playlist_link(playlist_name,items);
+					add_playlist_listeners();
+					if (typeof callback === 'function'){
+						callback.call();
+					}
+				})
+				.fail(function(e){
+					console.warn(e);
+				});
+			}
+		}
+		else {
+			console.warn("No playlist name provided");
+		}
+	}
+
+	var create_playlist_link = function(index,value){
+		$("<div></div>")
+			.addClass("sidebar-row playlist")
+			.attr({
+				"data-playlistname":index.toLowerCase()
+			})
+			.append($("<span></span>")
+				.text(index.toUpperCase()+" PLAYLIST")
+			)
+			.append($("<span></span>")
+				.addClass("playlist-item-count")
+				.css({
+					"text-align":"right"
+				})
+				.text(" ("+value.length+")")
+			)
+		.insertAfter($("#queue_sidebar_row"));
+	}
 
     var item_selected = function(items){
         var classname = get_row_classname();
@@ -1264,7 +1297,7 @@ $(document).ready(function(){
         else if ($this.attr('id') === 'edit_tags'){
 			hide_menu();
 			$("#edit_tags_confirm").text("Save changes");
-			$("#selected_for_edit_count").text("("+app_vars.selected.length+") selected");
+			$("#selected_for_edit_count").text(app_vars.selected.length);
 			if (app_vars.selected.length === 1){
 				var obj = media_objects[app_vars.selected[0]].opts;
 				console.log(obj);
@@ -1666,4 +1699,18 @@ $(document).ready(function(){
         }
     });
     // ---------------
+
+    $("#create_playlist_button").on("click",function(){
+		$("#playlist_name_field").val('');
+		$("#playlist_name_modal").modal();
+	});
+
+	$("#playlist_name_confirm").on("click",function(){
+		var playlist_name = $("#playlist_name_field").val();
+		create_playlist(playlist_name,[],function(){
+			$("#playlist_name_modal").modal('hide');
+			add_playlist_listeners();
+		});
+	});
+
 });

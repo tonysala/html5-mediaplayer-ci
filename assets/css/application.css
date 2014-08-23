@@ -231,6 +231,9 @@ html, body {
 .toolbar_buttons > button.btn-primary {
     border-color: #427DAF;
 }
+.toolbar_buttons span {
+	line-height:14px;
+}
 #sidebar_list {
 	width:100%;
 	margin:0;

@@ -128,6 +128,7 @@ class Xhr extends CI_Controller {
 	}
 
 	public function add_playlist(){
+		$this->set_json_out();
 		$name = $this->input->get("name");
 		$items = $this->input->get("items");
 		if ($name !== false && $items !== false){
