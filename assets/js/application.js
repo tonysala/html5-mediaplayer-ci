@@ -1,7 +1,7 @@
 $(document).ready(function(){
 
     // Define default settings
-    window.app_vars = {
+    app_vars = {
 
         selected   : [],
         status     : 0,
@@ -30,10 +30,11 @@ $(document).ready(function(){
         },
         results       : [],
         downloads     : [],
-        default_engine: 'mp3li'
+        default_engine: 'mp3li',
+        $editing_playlist_name : undefined
     };
 
-    window.elements = {
+    elements = {
         $progress_bar      : $("#progress_bar"),
         $track_pointer     : $("#track_pointer"),
         $control_playpause : $("#control_playpause"),
@@ -44,9 +45,9 @@ $(document).ready(function(){
     };
 
     // Cache the player element...
-    window.player = document.getElementById("_player");
+    player = document.getElementById("_player");
 
-    window.MediaObject = function(opts){
+    MediaObject = function(opts){
         var self = this;
         return {
             opts: opts,
@@ -65,7 +66,7 @@ $(document).ready(function(){
                 // set current item variable
                 app_vars.current = parseInt(opts.ID);
                 // remove all item status icons
-                $(".item-row .row-status").removeClass("fa-pause fa-play");
+                $(".item-row .row-status").removeClass("fa-pause fa-play fa-asterisk");
                 // set the current item status icon to pause icon
                 $row_status.removeClass("fa-play");
                 $row_status.addClass("fa-pause");
@@ -103,16 +104,22 @@ $(document).ready(function(){
                 // pause the player
                 player.pause();
                 // stop the progress bar
-                elements.$progress_bar.stop(true);
-                elements.$track_pointer.stop(true);
+                stop_seeker();
                 // set status to 0 (paused/stopped)
                 app_vars.status = 0;
                 return this;
             },
             click: function(){
-                // check if song was initiated in a playlist view
+                if (app_vars.playing_view !== app_vars.current_view){
+                    //play view was changed, empty old history object
+                    reset_history();
+                }
                 app_vars.playing_view = app_vars.current_view;
+                // check if song was initiated in a playlist view
                 if (app_vars.playing_view === "playlist_view"){
+                    if (app_vars.playing_playlist !== app_vars.current_playlist){
+                        reset_history();
+                    }
                     app_vars.playing_playlist = app_vars.current_playlist;
                 }
                 else {
@@ -183,7 +190,7 @@ $(document).ready(function(){
         };
     };
 
-    window.media_objects = {};
+    media_objects = {};
 
     // Do setup stuff
     $.fn.getId = function(){
@@ -213,9 +220,12 @@ $(document).ready(function(){
         });
     };
 
-    var add_item_to_library = function($item, index){
+    var add_item_to_library = function($item, index, status){
         if ($item.ID === undefined || $item.ID === null){
             return undefined;
+        }
+        if (typeof status === "undefined"){
+            status = "";
         }
         $element = $("<div></div>")
 			.addClass("row item-row")
@@ -228,7 +238,7 @@ $(document).ready(function(){
 			.append($("<div></div>")
 				.addClass("col-xs-1 col-md-1 row-status-container")
 				.append($("<i></i>")
-					.addClass("row-status fa")
+					.addClass("row-status fa "+status)
 				)
 			)
 			.append($("<div></div>")
@@ -292,7 +302,7 @@ $(document).ready(function(){
 	var create_playlist = function(playlist_name,items,callback){
 		if (playlist_name.length){
 			if (typeof app_vars.playlists[playlist_name] === 'undefined'){
-				$.ajax({
+                $.ajax({
 					url : "xhr/add_playlist",
 					data: {
 						name  : playlist_name,
@@ -312,6 +322,9 @@ $(document).ready(function(){
 					console.warn(e);
 				});
 			}
+            else {
+                alert("Name already taken");
+            }
 		}
 		else {
 			console.warn("No playlist name provided");
@@ -325,7 +338,7 @@ $(document).ready(function(){
 				"data-playlistname":index.toLowerCase()
 			})
 			.append($("<span></span>")
-				.text(index.toUpperCase()+" PLAYLIST ")
+                .html("<span class='playlist_name_span'>"+index.toUpperCase()+"</span> PLAYLIST ")
 			)
 			.append($("<span></span>")
 				.addClass("playlist-item-count")
@@ -335,10 +348,34 @@ $(document).ready(function(){
 				.text("("+value.length+")")
 			)
 		.insertAfter($("#queue_sidebar_row"));
+
+        $("<li></li>")
+            .append($("<a></a>")
+                .addClass("hidden-list-item")
+                .attr({
+                    tabindex:"-1"
+                })
+                .text(index)
+            )
+        .appendTo($("#playlist_list"));
 	}
 
+    var save_playlist = function(playlist){
+        $.ajax({
+            url : "xhr/save_playlist",
+            data: {
+                items : JSON.stringify(app_vars.playlists[playlist]),
+                name  : playlist.toLowerCase()
+            },
+            type: "get"
+        })
+        .done(function(e){
+            console.log(e);
+        });
+    }
+
     var items_selected = function(items){
-        var classname = get_row_classname();
+        var classname = get_view_row_classname();
         if (typeof items !== 'object'){
             throw new Error("items_selected() expects an array, "+(typeof items)+" given");
         }
@@ -380,7 +417,7 @@ $(document).ready(function(){
 
     var start_seeker = function(){
         // resume/start the progress bar
-        $(player).on("play",function(){
+        $(player).one("play",function(){
             elements.$progress_bar.animate({
                 width: "100%"},(player.duration - player.currentTime)*1000,"linear"
             );
@@ -388,6 +425,11 @@ $(document).ready(function(){
                 left: "100%"},(player.duration - player.currentTime)*1000,"linear"
             );
         });
+    };
+
+    var stop_seeker = function(){
+        elements.$progress_bar.stop(true);
+        elements.$track_pointer.stop(true);
     };
 
     var reset_seeker = function(){
@@ -424,7 +466,8 @@ $(document).ready(function(){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
-        var $next = $ele.next();
+        console.log($ele);
+        var $next = $ele.nextAll("."+get_play_row_classname()+":first");
         if ($next.length === 0){
             return get_first_id_in_order();
         }
@@ -432,11 +475,11 @@ $(document).ready(function(){
     };
 
     var get_first_id_in_order = function(){
-        return $(".item-row").first().getId();
+        return $("."+get_play_row_classname()).first().getId();
     };
 
     var get_last_id_in_order = function(){
-        return $(".item-row").last().getId();
+        return $("."+get_play_row_classname()).last().getId();
     };
 
     var get_prev_id_in_order = function(id){
@@ -444,7 +487,7 @@ $(document).ready(function(){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
-        var $prev = $ele.prev();
+        var $prev = $ele.prevAll("."+get_play_row_classname()+":first");
         console.log($prev);
         if ($prev.length === 0){
             return get_last_id_in_order();
@@ -459,7 +502,6 @@ $(document).ready(function(){
         if (app_vars.queue.length > 0){
             next = app_vars.queue.shift();
             update_queue_count();
-            $(".queue").find(".queue-itemcount").text("("+app_vars.queue.length+")");
             media_objects[next].play().show();
         }
         // check if repeat is set
@@ -488,11 +530,22 @@ $(document).ready(function(){
             else {
                 var found = false;
                 while(found === false){
-                    next_index = Math.floor(Math.random() * (app_vars.item_ids.length - 0 + 1)) + 0;
-                    next = $(".item-row").eq(next_index).getId();
+                    var bucket;
+                    if (app_vars.playing_view === "library_view"){
+                        bucket = app_vars.item_ids;
+                    }
+                    else if (app_vars.playing_view === "playlist_view"){
+                        bucket = app_vars.playlists[app_vars.current_playlist];
+                    }
+                    next_index = Math.floor(Math.random() * (bucket.length - 0 + 1)) + 0;
+                    next = $("."+get_play_row_classname()).eq(next_index).getId();
                     if (next !== undefined && next !== app_vars.current){
                         found = true;
                         // Add to player history
+                        if ($.inArray(next,app_vars.history) !== -1){
+                            var array_index = app_vars.history.indexOf(next);
+                            app_vars.history.splice(array_index, 1);
+                        }
                         app_vars.history.items.push(next);
                         app_vars.history.pointer++;
                         media_objects[next].play().show();
@@ -537,6 +590,13 @@ $(document).ready(function(){
             }
         }
         prev = undefined;
+    };
+
+    var reset_history = function(){
+        app_vars.history = {
+            items: [],
+            pointer: -1
+        };
     };
 
     var load_cover_art = function(){
@@ -667,7 +727,7 @@ $(document).ready(function(){
     var add_to_queue = function(){
         for (var c = 0; c < app_vars.selected.length; c++){
             if ($.inArray(app_vars.selected[c],app_vars.queue) === -1){
-                app_vars.queue.push(app_vars.selected[c]);
+                app_vars.queue.push(parseInt(app_vars.selected[c]));
             }
         }
         update_queue_count();
@@ -690,7 +750,7 @@ $(document).ready(function(){
 	}
 
     var sort_items = function(by, asc){
-        var $items = $(".item-row");
+        var $items = $("."+get_view_row_classname());
 
         $items.sort(function(a,b){
             var an = $(a).find("."+by).text().toLowerCase();
@@ -843,7 +903,7 @@ $(document).ready(function(){
 					}
 					else {
 						console.log(json_response);
-						add_item_to_library(json_response.inserted,Object.keys(media_objects).length);
+						add_item_to_library(json_response.inserted,Object.keys(media_objects).length,"fa-asterisk");
 						update_library_count();
 					}
 				}
@@ -902,15 +962,13 @@ $(document).ready(function(){
         });
     };
 
-    var get_row_classname = function(){
+    var get_view_row_classname = function(){
         var classname;
-        if (app_vars.current_view === "library_view" || app_vars.current_view === "playlist_view"){
-            if (app_vars.playing_view === "library_view"){
-                classname = "item-row";
-            }
-            else {
-                classname = "item-row.playlist-row";
-            }
+        if (app_vars.current_view === "library_view"){
+            classname = "item-row";
+        }
+        else if (app_vars.current_view === "playlist_view"){
+            classname = "item-row.playlist-row";
         }
         else if (app_vars.current_view === "downloads_view"){
             classname = "download-row";
@@ -920,6 +978,23 @@ $(document).ready(function(){
         }
         return classname;
     };
+
+    var get_play_row_classname = function(){
+        var classname;
+        if (app_vars.playing_view === "library_view"){
+            classname = "item-row";
+        }
+        else if (app_vars.playing_view === "playlist_view"){
+            classname = "item-row.playlist-row";
+        }
+        else if (app_vars.playing_view === "downloads_view"){
+            classname = "download-row";
+        }
+        else if (app_vars.playing_view === "results_view"){
+            classname = "result-row";
+        }
+        return classname;
+    }
 
     var get_files = function(query,callback){
         if (typeof $search_request !== 'undefined'){
@@ -1110,23 +1185,14 @@ $(document).ready(function(){
             for (var c = 0;c < app_vars.moving.length; c++){
                 if ($.inArray(app_vars.moving[c],app_vars.playlists[playlist]) === -1){
                     $(this).data().itemcount += 1;
+                    console.log(playlist);
                     app_vars.playlists[playlist].unshift(app_vars.moving[c]);
                     //console.debug("item added to "+playlist);
                 } else {
                     //console.debug("item already in playlist");
                 }
             }
-            $.ajax({
-                url : "xhr/save_playlist",
-                data: {
-                    items : JSON.stringify(app_vars.playlists[playlist]),
-                    name  : playlist.toLowerCase()
-                },
-                type: "get"
-            })
-            .done(function(e){
-                console.log(e);
-            });
+            save_playlist(playlist);
             update_playlist_count(playlist);
             app_vars.moving = undefined;
         })
@@ -1146,6 +1212,20 @@ $(document).ready(function(){
             },$(this));
             app_vars.current_playlist = playlist;
             app_vars.current_view = "playlist_view";
+        })
+        .on("dblclick",".playlist_name_span",function(){
+            app_vars.$editing_playlist_name = $(this).attr({
+                contenteditable: "true"
+            })
+            .focus().select();
+        })
+        .on("blur",".playlist_name_span",function(e){
+            $(this).text($(this).text().toUpperCase())
+            .attr({
+                contenteditable: "false"
+            });
+            save_playlist(app_vars.$editing_playlist_name.parent().data('playlistname'));
+            app_vars.$editing_playlist_name = undefined;
         });
     };
     // --------------------------
@@ -1212,6 +1292,65 @@ $(document).ready(function(){
 				$("#id3_modal").modal({});
 			}
 		}
+        else if ($this.attr('id') === 'delete_item'){
+            var data = {
+                id:[],
+                md5:[]
+            };
+            $.each(app_vars.selected,function(){
+                var obj = media_objects[this];
+                data.id.push(obj.opts.ID);
+                data.md5.push(obj.opts.FileMD5);
+                
+                // remove element(s) and all trace of element(s)
+                obj.opts.$element.remove();
+                // remove from item_ids array
+                var index = app_vars.item_ids.indexOf(parseInt(obj.opts.ID));
+                app_vars.item_ids.splice(index, 1);                
+                // remove from history (if found)
+                var h_index = app_vars.history.items.indexOf(parseInt(obj.opts.ID));
+                if (h_index !== -1){
+                    app_vars.history.items.splice(h_index, 1);
+                    app_vars.history.pointer--;
+                }
+                // remove from queue (if found)
+                var q_index = app_vars.queue.indexOf(parseInt(obj.opts.ID));
+                if (q_index !== -1){
+                    app_vars.queue.splice(q_index, 1);
+                }
+                // unset as current (if set)
+                if (app_vars.current === parseInt(obj.opts.ID)){
+                    app_vars.current = undefined;
+                    if (app_vars.status === 1){
+                        next_item();
+                    }
+                }
+                app_vars.selected = [];
+                // remove from any playlist
+                $.each(app_vars.playlists,function(key,value){
+                    console.log(key);
+                    var index = app_vars.playlists[key].indexOf(parseInt(obj.opts.ID));
+                    if (index !== -1){
+                        app_vars.playlists[key].splice(index, 1);
+                        save_playlist(key);
+                    }
+                    update_playlist_count(key);
+                });
+                // unset mediaObject
+                media_objects[obj.opts.ID] = undefined;
+            });
+            update_library_count();
+            update_queue_count();
+            hide_menu();
+            $.ajax({
+                url : "xhr/delete_item",
+                data: data,
+                type: "get"
+            })
+            .done(function(data){
+                console.log(data);
+            });
+        }
     });
     // End ContextMenu Code
 
@@ -1286,8 +1425,9 @@ $(document).ready(function(){
             $filter.blur();
             return;
         }
+        var classname = get_view_row_classname();
         if (query.length > 2){
-            $(".item-row").each(function(){
+            $("."+classname).each(function(){
                 //$element = $filter;
                 var $element = $(this);
                 if ($element.find(".trackname").text().toLowerCase().indexOf(query) !== -1){
@@ -1301,14 +1441,19 @@ $(document).ready(function(){
                 }
             });
         } else {
-            $(".item-row").show();
+            console.log(get_view_row_classname());
+            $("."+classname).show();
         }
     });
     // End Search code
 
     $(player)
     .on("stalled",function(){
-
+        stop_seeker();
+        console.warn("stalled, loading...");
+        $(this).one("play",function(){
+            start_seeker();
+        });
     })
     .on("ended", function(){
         $.ajax({
@@ -1328,8 +1473,8 @@ $(document).ready(function(){
         // play next item
         next_item();
     })
-    .on("seeking",function(){
-        console.debug("trying to fetch data...");
+    .on("error",function(){
+        next_item();
     });
 
     $("#volume_down, #volume_up").on("click",function(){
@@ -1420,6 +1565,20 @@ $(document).ready(function(){
     $(document)
     .on("keydown",function(event) {
         var key = event.keyCode;
+        if (app_vars.$editing_playlist_name !== undefined){
+            console.log(key);
+            if (key === 13){
+                app_vars.$editing_playlist_name.text(
+                    app_vars.$editing_playlist_name.text().toUpperCase()
+                )
+                .attr({
+                    contenteditable: "false"
+                });
+                save_playlist(app_vars.$editing_playlist_name.parent().data('playlistname'));
+                app_vars.$editing_playlist_name = undefined;
+            }
+            return;
+        }
         if (key === 70 && event.ctrlKey) { // Ctrl + f
             $("#item_filter").focus();
             event.preventDefault();
@@ -1428,7 +1587,7 @@ $(document).ready(function(){
         } else if (key === 65 && event.ctrlKey){
             items_selected(app_vars.item_ids);
         }
-        console.debug("KEY: "+key);
+        // console.debug("KEY: "+key);
     })
     .on("keyup",function(event){
 
@@ -1518,7 +1677,7 @@ $(document).ready(function(){
         console.debug("adding to queue");
         for (var c = 0;c < app_vars.moving.length; c++){
             if ($.inArray(app_vars.moving[c],app_vars.queue) === -1){
-                app_vars.queue.unshift(app_vars.moving[c]);
+                app_vars.queue.unshift(parseInt(app_vars.moving[c]));
                 // ajax code
                 console.debug("item added to queue: "+app_vars.moving[c]);
             } else {
@@ -1537,7 +1696,7 @@ $(document).ready(function(){
             $(".pageview").hide();
             elements.$library_view.show();
             for (var c = 0; c < app_vars.queue.length; c++){
-                $("#_media_"+app_vars.queue[c]).show().addClass("playlist-item");
+                $("#_media_"+app_vars.queue[c]).show().addClass("playlist-row");
             }
         },$(this));
     });
@@ -1584,14 +1743,14 @@ $(document).ready(function(){
     });
     // ---------------
 
-    $("#create_playlist_button").on("click",function(){
+    $("#add_to_new_playlist,#create_playlist_button").on("click",function(){
 		$("#playlist_name_field").val('');
 		$("#playlist_name_modal").modal();
 	});
 
 	$("#playlist_name_confirm").on("click",function(){
-		var playlist_name = $("#playlist_name_field").val();
-		create_playlist(playlist_name,[],function(){
+		var playlist_name = $("#playlist_name_field").val().toLowerCase();
+		create_playlist(playlist_name,app_vars.selected,function(){
 			$("#playlist_name_modal").modal('hide');
 			add_playlist_listeners();
 		});

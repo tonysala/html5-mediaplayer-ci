@@ -19,6 +19,34 @@ class Xhr extends CI_Controller {
 		exit;
 	}
 
+	public function delete_item(){
+		$this->set_json_out();
+		$id = $this->input->get('id');
+		$md5s = $this->input->get('md5');
+		$return = [];
+		if ($id !== false && $md5s !== false){
+			$sql = 'DELETE FROM music WHERE ID IN ('.implode(',',$this->db->escape_str($id)).')';
+			$this->db->query($sql);
+			$return = ["error"=>false,"affected"=>$this->db->affected_rows()];
+			foreach($md5s as $md5){
+				if (preg_match('/[a-f0-9]+/i',$md5)){
+					@unlink("/var/www/player/tracks/".$md5.".mp3");
+				}
+				else {
+					$return = [
+						"error"=>true,
+						"affected"=>$this->db->affected_rows(),
+						"message"=>"bad md5 parameter ".$md5
+					];
+				}
+			}
+		}
+		else {
+			$return = ["error"=>true,"affected"=>0,"message"=>"missing parameters"];
+		}
+		print json_encode($return);
+	}
+
 	public function edit_tags(){
 		$post = $this->input->post();
 		$this->set_json_out();

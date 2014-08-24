@@ -115,9 +115,7 @@
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
     <li id='add_to_playlist'><a tabindex="-1" id="to_playlist">Add to Playlist&nbsp;&nbsp;&nbsp;<i class='fa fa-caret-down'></i></a></li>
     <ul class='dropdown-menu' id='playlist_list'>
-		<li><a tabindex="-1" class="hidden-list-item">Work Playlist</a></li>
-		<li><a tabindex="-1" class="hidden-list-item">Home Playlist</a></li>
-		<li><a tabindex="-1" class="hidden-list-item">Workout Playlist</a></li>
+    	<li id="add_to_new_playlist"><a>Create new...</a></li>
 		<li class="divider"></li>
     </ul>
     <li id='add_to_queue'><a tabindex="-1">Add to Queue</a></li>
@@ -145,7 +143,7 @@
 				<div class="row">
 					<div class="col-xs-12">
 						<div id="multi_edit_warning" class="alert alert-warning">
-							Warning your are editing multiple items!
+							Warning you're are editing multiple items!
 						</div>
 						<div id="edit_failed_error" class="alert alert-danger">
 							An error occured while updating your records!
