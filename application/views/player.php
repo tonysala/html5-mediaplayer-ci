@@ -11,9 +11,9 @@
             </div>
             <div class="btn-group toolbar_buttons">
                 <button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-random"></i></button>
-                <button type="button" class="btn btn-default" id="loop" title='Play on Repeat!'><i class="fa fa-refresh"></i></button>
-                <button type="button" class="btn btn-default" id="settings" title='Fiddle with the knobs!'><i class="fa fa fa-gear"></i></button>
-                <button class="btn btn-default" id="create_playlist_button" title="create a playlist">
+                <button type="button" class="btn btn-default" id="loop" title='Repeat!'><i class="fa fa-refresh"></i></button>
+                <button type="button" class="btn btn-default" id="settings" title='Settings'><i class="fa fa fa-gear"></i></button>
+                <button class="btn btn-default" id="create_playlist_button" title="Create a Playlist">
 					<span>Create Playlist</span>
                 </button>
             </div>
@@ -168,7 +168,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-default" id="identify_button">Identify (Beta)</button>
+				<button type="button" class="btn btn-default" id="identify_button">Identify Track</button>
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
 			</div>

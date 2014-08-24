@@ -1104,7 +1104,7 @@ $(document).ready(function(){
             }
             // left click (selected item)
             else {
-                var classname = "item-row";
+                var classname = get_view_row_classname();
                 if (event.which === 1){
                     var c;
                     var $items = [];
@@ -1112,23 +1112,28 @@ $(document).ready(function(){
                     if (event.shiftKey){
                         // multi select items
                         var items = [];
-                        var $low = $("."+classname+".selected-row").first();
+                        var $low = $("."+classname+".selected-row:visible:first");
+                        var $high = $("."+classname+".selected-row:visible:last");
+
                         if (!$low.length){
                             $items.push($row);
                         }
                         else {
-                            var $high = $("."+classname+".selected-row").last();
                             if ($row.index() > $low.index()){
-                                $items = $low.nextUntil($row,":visible");
+                                $items = $low.nextUntil($row,"."+classname+":visible");
+                                items.push($low.getId());
+                                items.push($row.getId());
                             }
                             else if ($row.index() < $low.index()){
-                                $items = $high.prevUntil($row,":visible");
+                                $items = $high.prevUntil($row,"."+classname+":visible");
+                                items.push($high.getId());
+                                items.push($low.getId());
+                                items.push($row.getId());
                             }
                             else if ($row.index() === $low.index()){
                                 $items = $row;
                             }
-                            $items.push($low);
-                            $items.push($row);
+                            
                         }
                         $.each($items,function(){
                             items.push($(this).getId());
@@ -1271,13 +1276,15 @@ $(document).ready(function(){
 				var obj = media_objects[app_vars.selected[0]].opts;
 				console.log(obj);
 				$("#track_edit").val(obj.TrackName).prop({disabled:false});
-				$("#artist_edit").val(obj.ArtistName);
-				$("#album_edit").val(obj.AlbumName);
-				$("#year_edit").val(obj.Year);
-				$("#genre_edit").val(obj.GenreName);
+                $("#artist_edit").val(obj.ArtistName);
+                $("#album_edit").val(obj.AlbumName);
+                $("#year_edit").val(obj.Year);
+                $("#genre_edit").val(obj.GenreName);
                 $("#multi_edit_warning").hide();
-			}
-			else {
+                $("#identify_button").text("Identify Track").prop({disabled:false});
+            }
+            else {
+                $("#identify_button").text("Identify Track").prop({disabled:true});
 				$("#track_edit").val('').prop({disabled:true});
 				$("#artist_edit").val('');
 				$("#album_edit").val('');
@@ -1670,6 +1677,7 @@ $(document).ready(function(){
 
     $("#add_to_queue").on("click",function(){
         add_to_queue();
+        hide_menu();
     });
 
     $("#queue_sidebar_row")
@@ -1755,5 +1763,44 @@ $(document).ready(function(){
 			add_playlist_listeners();
 		});
 	});
+
+    $("#identify_button").on("click",function(){
+        var md5 = media_objects[app_vars.selected[0]].opts.FileMD5;
+        var $button = $(this);
+        $button.text("Analysing...");
+        $.ajax({
+            url: "xhr/analyse_file",
+            data: {
+                md5 : md5
+            },
+            type: "get",
+            dataType: "json"
+        })
+        .done(function(data){
+            $("#identify_button").text("Done");
+            // console.log(data.response);
+            if (data.response.status.code !== 0){
+                console.warn(data.response.status.message);
+            }
+            else if (typeof data.response.track === "object"){
+                console.log(data.response.track);
+                $track_edit = $("#track_edit");
+                $artist_edit = $("#artist_edit");
+                $album_edit = $("#album_edit");
+                if ((!$track_edit.val().length || $track_edit.val() === "-") && data.response.track.title !== ""){
+                    $track_edit.val(data.response.track.title);
+                }
+                if ((!$artist_edit.val().length || $artist_edit.val() === "-") && data.response.track.artist !== ""){
+                    $artist_edit.val(data.response.track.artist);
+                }
+                if ((!$album_edit.val().length || $album_edit.val() === "-") && data.response.track.release !== ""){
+                    $album_edit.val(data.response.track.release);
+                }
+            }
+        })
+        .fail(function(data){
+            $("#identify_button").text("Failed");
+        });
+    });
 
 });

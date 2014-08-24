@@ -19,6 +19,14 @@ class Xhr extends CI_Controller {
 		exit;
 	}
 
+	public function analyse_file(){
+		$this->set_json_out();
+		$md5 = $this->input->get('md5');
+		if ($md5 !== false){
+			$this->echonest->analyse_file($md5);
+		}
+	}
+
 	public function delete_item(){
 		$this->set_json_out();
 		$id = $this->input->get('id');
