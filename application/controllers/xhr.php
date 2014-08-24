@@ -76,8 +76,8 @@ class Xhr extends CI_Controller {
 	public function get_cover_art(){
 		if ($id = $this->input->get("id")){
 			$item = $this->itemlist->get_item($id);
-			if (!empty($item->Artist) && !empty($item->Album)){
-				$search_term = $item->Artist." ".$item->Album." ".$item->Year." album cover";
+			if (!empty($item->ArtistName) && !empty($item->AlbumName)){
+				$search_term = $item->ArtistName." ".$item->AlbumName." ".$item->Year." album cover";
 				if (!$url = $this->_get_google_img($search_term)){
 					$url = "/assets/images/album-placeholder.png";
 				}

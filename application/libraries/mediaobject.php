@@ -64,28 +64,4 @@ class MediaObject {
 		}
 	}
 
-	// public function get_foreign($id, $foreign_col, $table){
-	// 	$id = $this->CI->db->escape($id);
-	// 	// Cant escape table name using codeigniter function
-	// 	$result = $this->CI->db->query("SELECT ".$foreign_col." FROM `".$table."` WHERE ID = ".$id.";");
-	// 	$value = $result->first_row();
-	// 	if (is_object($value)){
-	// 		return $value->$foreign_col;
-	// 	} else return "Unknown";
-	// }
-
-	// public function __get($property){
-	// 	if (property_exists($property,get_class($this))){
-	// 		return $property;
-	// 	} else {
-	// 		if ($property === "Artist"){
-	// 			return $this->get_foreign($this->ArtistID,"ArtistName","artists");
-	// 		} else if ($property === "Album"){
-	// 			return $this->get_foreign($this->AlbumID,"AlbumName","albums");
-	// 		} else if ($property === "Genre"){
-	// 			return $this->get_foreign($this->GenreID,"GenreName","genres");
-	// 		}
-	// 	}
-	// }
-
 }

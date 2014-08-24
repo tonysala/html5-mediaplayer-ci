@@ -404,3 +404,25 @@ img#cover_art_image:hover {
 		padding-right:15px!important;
 	}
 }
+.compact-modal .modal-header {
+	padding:10px;
+}
+.compact-modal .modal-body {
+	padding: 10px;
+}
+.compact-modal .modal-footer {
+	padding: 10px;
+	magin-top:5px;
+}
+.compact-modal .alert {
+	padding: 8px 15px;
+	margin-bottom: 10px;
+	display:none;
+}
+.compact-modal .form-control {
+	height: 28px;
+	margin-bottom:5px;
+}
+.compact-modal .btn {
+	padding: 3px 12px;
+}

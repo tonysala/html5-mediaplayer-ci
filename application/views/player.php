@@ -81,6 +81,7 @@
 							    <li data-sortby='trackname'><a href="#">Track</a></li>
 								<li data-sortby='artistname'><a href="#">Artist</a></li>
 								<li data-sortby='albumname'><a href="#">Album</a></li>
+								<li data-sortby='plays'><a href="#">Plays</a></li>
 							</ul>
 							<button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-sort-alpha-asc"></i></button>
 						</div>
@@ -134,32 +135,37 @@
     <li id='delete_item'><a tabindex="-1">Delete from Library</a></li>
 </ul>
 <div class="modal fade" id="id3_modal">
-	<div class="modal-dialog">
+	<div class="modal-dialog compact-modal">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-				<h4 class="modal-title">Edit <span id="selected_for_edit_count"></span> Item(s)</h4>
+				<h5 class="modal-title">Edit <span id="selected_for_edit_count"></span> Item(s)</h5>
 			</div>
 			<div class="modal-body">
 				<div class="row">
+					<div class="col-xs-12">
+						<div id="multi_edit_warning" class="alert alert-warning">
+							Warning your are editing multiple items!
+						</div>
+						<div id="edit_failed_error" class="alert alert-danger">
+							An error occured while updating your records!
+						</div>
+					</div>
+				</div>
+				<div class="row">
 					<div class="col-xs-6">
 						<span>Track:</span>
-						<input type="text" class="form-control" placeholder="track" id="track_edit"/>
-						<br>
+						<input type="text" class="form-control" id="track_edit"/>
 						<span>Album:</span>
-						<input type="text" class="form-control" placeholder="album" id="album_edit"/>
-						<br>
+						<input type="text" class="form-control" id="album_edit"/>
 						<span>Genre:</span>
-						<input type="text" class="form-control" placeholder="genre" id="genre_edit"/>
-						<br>
+						<input type="text" class="form-control" id="genre_edit"/>
 					</div>
 					<div class="col-xs-6">
 						<span>Artist:</span>
-						<input type="text" class="form-control" placeholder="artist" id="artist_edit"/>
-						<br>
+						<input type="text" class="form-control" id="artist_edit"/>
 						<span>Year Released:</span>
-						<input type="text" class="form-control" placeholder="year" id="year_edit"/>
-						<br>
+						<input type="text" class="form-control" id="year_edit"/>
 					</div>
 				</div>
 			</div>
@@ -172,11 +178,11 @@
 	</div>
 </div>
 <div class="modal fade" id="playlist_name_modal">
-	<div class="modal-dialog modal-sm">
+	<div class="modal-dialog modal-sm compact-modal">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-				<h4 class="modal-title">Name your playlist</h4>
+				<h5 class="modal-title">Name your playlist</h5>
 			</div>
 			<div class="modal-body">
 				<span>Playlist Name:</span>

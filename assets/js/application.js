@@ -22,6 +22,7 @@ $(document).ready(function(){
         current_view  : "library_view",
         playing_view  : "library_view",
         current_playlist : undefined,
+        playing_playlist : undefined,
         item_ids      : [],
         sort          : {
             order: 1,
@@ -52,7 +53,7 @@ $(document).ready(function(){
             url: function(){
                 return opts.Filename.replace("/var/www/player",window.location.origin);
             },
-            play: function(){
+            play: function(){       
                 var $ele = opts.$element;
                 // set some vars
                 var trackname = $ele.find(".trackname span").text();
@@ -68,9 +69,23 @@ $(document).ready(function(){
                 // set the current item status icon to pause icon
                 $row_status.removeClass("fa-play");
                 $row_status.addClass("fa-pause");
-                play_item(
-                    this.url()
-                );
+                // set player source
+                $("#_player > source").prop({
+                    "src" :this.url(),
+                    "type":"audio/mpeg"
+                });
+                // set player play/pause button to pause icon
+                var $playpause_button = elements.$control_playpause.find(".fa");
+                $playpause_button.removeClass("fa-play");
+                $playpause_button.addClass("fa-pause");
+                // reset the seeker
+                reset_seeker();
+                // initialise the player
+                player.load();
+                // start seeker animation
+                start_seeker();
+                // set status to 1 (playing)
+                app_vars.status = 1;
                 load_cover_art();
                 return this;
             },
@@ -95,8 +110,15 @@ $(document).ready(function(){
                 return this;
             },
             click: function(){
-                //var $ele = opts.$element;
-                app_vars.selected = [opts.ID];
+                // check if song was initiated in a playlist view
+                app_vars.playing_view = app_vars.current_view;
+                if (app_vars.playing_view === "playlist_view"){
+                    app_vars.playing_playlist = app_vars.current_playlist;
+                }
+                else {
+                    app_vars.playing_playlist = undefined;
+                }
+                this.select();
                 // if we clicked the current playing item, pause the player
                 if (parseInt(app_vars.current) === parseInt(opts.ID) && app_vars.status === 1){
                     this.pause();
@@ -111,8 +133,16 @@ $(document).ready(function(){
                 this.show();
                 return this;
             },
+            select: function(){
+                // check if this item is already in the selected array
+                if ($.inArray(parseInt(opts.ID),app_vars.selected) === -1){
+                    app_vars.selected.push(parseInt(opts.ID));
+                    opts.$element.addClass("selected-row");
+                }
+            },
             show: function(){
                 opts.$element.scrollIntoView();
+                return this;
             },
             edit: function(changes){
 				if (typeof changes.track !== "undefined"){
@@ -148,6 +178,7 @@ $(document).ready(function(){
 					opts.GenreName = changes.genre;
 					opts.GenreID = changes.genreID;
 				}
+                return this;
 			}
         };
     };
@@ -175,10 +206,7 @@ $(document).ready(function(){
         })
         .done(function(items){
             $.each(items,function(index,$item){
-                // var $item = $(this);
-                //console.log($item);
                 add_item_to_library($item, index);
-                // media_objects[$item.ID].url();
             });
             update_library_count();
             add_item_row_listeners();
@@ -309,26 +337,18 @@ $(document).ready(function(){
 		.insertAfter($("#queue_sidebar_row"));
 	}
 
-    var item_selected = function(items){
+    var items_selected = function(items){
         var classname = get_row_classname();
         if (typeof items !== 'object'){
-            throw new Error("item_selected() expects an array, "+(typeof items)+" given");
+            throw new Error("items_selected() expects an array, "+(typeof items)+" given");
         }
-        console.debug("items selected: ("+items.length+")");
+        console.debug("items selected: ("+items.length+") "+JSON.stringify(items));
         // unselect previously selected items
         $("."+classname).removeClass("selected-row");
         app_vars.selected = [];
         // add items to the selected array
         $.each(items,function(){
-            if (typeof this !== 'number' && !(this instanceof Number)){
-                throw new Error("item_selected() expects an array of integers, element of type "+(typeof items)+" given in array");
-            }
-            var $ele = get_item_element_by_id(this);
-            // check if this item is already in the selected array
-            if ($.inArray(parseInt(this),app_vars.selected) === -1){
-                app_vars.selected.push(parseInt(this));
-                $ele.addClass("selected-row");
-            }
+            media_objects[parseInt(this)].select();
         });
         // sort the selected array by id smallest to largest
         app_vars.selected.sort(function(a, b){return a-b;});
@@ -353,47 +373,6 @@ $(document).ready(function(){
         $playpause_button.addClass("fa-pause");
         // resume the player
         player.play();
-        start_seeker();
-        // set status to 1 (playing)
-        app_vars.status = 1;
-    };
-
-    var pause_item = function(){
-        // get the current element
-        var $ele = get_item_element_by_id(app_vars.current);
-        var $row_status = $ele.find(".row-status");
-        // set element status icon to play icon
-        $row_status.removeClass("fa-pause");
-        $row_status.addClass("fa-play");
-        // set player play/pause button to play icon
-        var $playpause_button = elements.$control_playpause.find(".fa");
-        $playpause_button.removeClass("fa-pause");
-        $playpause_button.addClass("fa-play");
-        // pause the player
-        player.pause();
-        // stop the progress bar
-        elements.$progress_bar.stop(true);
-        elements.$track_pointer.stop(true);
-        // set status to 0 (paused/stopped)
-        app_vars.status = 0;
-    };
-
-    var play_item = function(link){
-        console.debug("loading remote media: "+link);
-        // set player source
-        $("#_player > source").prop({
-            "src" :link,
-            "type":"audio/mpeg"
-        });
-        // set player play/pause button to pause icon
-        var $playpause_button = elements.$control_playpause.find(".fa");
-        $playpause_button.removeClass("fa-play");
-        $playpause_button.addClass("fa-pause");
-        // reset the seeker
-        reset_seeker();
-        // initialise the player
-        player.load();
-        // start seeker animation
         start_seeker();
         // set status to 1 (playing)
         app_vars.status = 1;
@@ -445,10 +424,11 @@ $(document).ready(function(){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
-        if ($ele !== undefined){
-            return $ele.next().getId();
+        var $next = $ele.next();
+        if ($next.length === 0){
+            return get_first_id_in_order();
         }
-        return get_first_id_in_order();
+        return $next.getId();
     };
 
     var get_first_id_in_order = function(){
@@ -459,27 +439,28 @@ $(document).ready(function(){
         return $(".item-row").last().getId();
     };
 
-    var get_prev_id_in_order = function(){
-        var $ele = get_item_element_by_id(id);
-        var $next_ele = $ele.prev();
-        if ($next_ele !== undefined){
-            return $next_ele.getId();
+    var get_prev_id_in_order = function(id){
+        if (id === undefined){
+            throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
-        return get_last_id_in_order();
+        var $ele = get_item_element_by_id(id);
+        var $prev = $ele.prev();
+        console.log($prev);
+        if ($prev.length === 0){
+            return get_last_id_in_order();
+        }
+        return $prev.getId();
     };
 
     var next_item = function(){
         app_vars.status = 0;
-        var title, next, item_id, $element;
-        if (app_vars.playing_view !== "library_view"){
-            return;
-        }
+        var next;
         // Check if there are items in the queue
         if (app_vars.queue.length > 0){
             next = app_vars.queue.shift();
             update_queue_count();
             $(".queue").find(".queue-itemcount").text("("+app_vars.queue.length+")");
-            media_objects[item_id].play().show();
+            media_objects[next].play().show();
         }
         // check if repeat is set
         else if (app_vars.loop === true){
@@ -497,18 +478,11 @@ $(document).ready(function(){
             if (app_vars.shuffle === false){
                 if (app_vars.current === undefined){
                     next = get_first_id_in_order();
-                } else {
-                    console.debug("current id : "+app_vars.current);
+                }
+                else {
                     next = get_next_id_in_order(app_vars.current);
                 }
-
-                if (get_item_element_by_id(next) !== undefined){
-                    item_id = next;
-                } else {
-                    item_id = get_first_id_in_order();
-                }
-                console.debug("next item id : "+item_id);
-                media_objects[item_id].play().show();
+                media_objects[next].play().show();
             }
             // get random next item
             else {
@@ -522,7 +496,7 @@ $(document).ready(function(){
                         app_vars.history.items.push(next);
                         app_vars.history.pointer++;
                         media_objects[next].play().show();
-                        console.debug("POINTER:"+app_vars.history.pointer);
+                        console.debug("pointer:"+app_vars.history.pointer);
                         console.debug(app_vars.history.items);
                     }
                 }
@@ -531,35 +505,29 @@ $(document).ready(function(){
     };
 
     var prev_item = function(){
-        var next_id;
+        var prev;
         if (app_vars.current === undefined){
-            next_id = get_first_id_in_order();
-            media_objects[next_id].play();
-            // item_clicked(get_first_id_in_order());
+            prev = get_first_id_in_order();
+            media_objects[prev].play();
             return;
         }
         if (player.currentTime > 3 || app_vars.loop === true){
-            next_id = app_vars.current;
-            media_objects[next_id].play();
+            prev = app_vars.current;
+            media_objects[prev].play();
         }
         else {
             if (app_vars.shuffle === false){
-                var prev = get_item_index_by_id(app_vars.current) - 1;
-                if (prev >= 0){
-                    next_id = app_vars.item_ids[prev];
-                } else {
-                    next_id = app_vars.item_ids[app_vars.item_ids.length - 1];
-                }
-                media_objects[next_id].play();
-                // item_clicked(next_id);
-            } else {
-                console.debug("POINTER:"+app_vars.history.pointer);
+                prev = get_prev_id_in_order(app_vars.current);
+                console.log(prev);
+                media_objects[prev].play();
+            } 
+            else {
+                console.debug("pointer:"+app_vars.history.pointer);
                 console.debug(app_vars.history.items);
                 if (app_vars.history.pointer > 0 && app_vars.history.items[app_vars.history.pointer] !== app_vars.current){
                     app_vars.history.pointer--;
-                    next_id = app_vars.history.items[app_vars.history.pointer];
-                    media_objects[next_id].play();
-                    // item_clicked(next_id);
+                    prev = app_vars.history.items[app_vars.history.pointer];
+                    media_objects[prev].play();
                 } else {
                     if (app_vars.history.pointer === 0 && app_vars.history.items.length > 0){
                         app_vars.history.items = [];
@@ -568,7 +536,7 @@ $(document).ready(function(){
                 }
             }
         }
-        next_id = undefined;
+        prev = undefined;
     };
 
     var load_cover_art = function(){
@@ -635,6 +603,20 @@ $(document).ready(function(){
         }
     };
 
+    window.echonest_analyse = function(id){
+        var file = encodeURIComponent(media_objects[id].url());
+        var api_key = encodeURIComponent("RDJJ0FGRTN5AAE889");
+        var endpoint = "http://developer.echonest.com/api/v4/track/upload/";
+        var params = "?api_key="+api_key+"&format=jsonp&url="+file+"&callback="+encodeURIComponent("echonest_cb");
+
+        var url = endpoint + params;
+        $("<script></script>").attr({src:url}).appendTo($("head"));
+    }
+
+    window.echonest_cb = function(data){
+        console.log(data);
+    }
+
     var move_slider_pointer = function(pageX){
         var start = $(".slider-line").offset().left;
         var width = $(".slider-line").width() - 4;
@@ -672,7 +654,6 @@ $(document).ready(function(){
     var switch_view = function(to, callback, $menuitem){
         hide_menu();
         if (app_vars.current_view !== to){
-            //$(".item-row").hide();
             if (typeof callback === "function"){
                 callback.call();
             }
@@ -680,7 +661,7 @@ $(document).ready(function(){
             $menuitem.css({"background":"ghostwhite"});
             app_vars.current_view = to;
         }
-        item_selected([]);
+        items_selected([]);
     };
 
     var add_to_queue = function(){
@@ -689,7 +670,7 @@ $(document).ready(function(){
                 app_vars.queue.push(app_vars.selected[c]);
             }
         }
-        $(".queue").find(".queue-itemcount").text("("+app_vars.queue.length+")");
+        update_queue_count();
     };
 
     var update_queue_count = function(){
@@ -710,7 +691,6 @@ $(document).ready(function(){
 
     var sort_items = function(by, asc){
         var $items = $(".item-row");
-        var $item_container = $(".items-container");
 
         $items.sort(function(a,b){
             var an = $(a).find("."+by).text().toLowerCase();
@@ -722,9 +702,8 @@ $(document).ready(function(){
                 return (asc) ? -1 : 1;
             }
             return 0;
-        });
-
-        $items.detach().appendTo($item_container);
+        })
+        .detach().appendTo(elements.$library_view_inner);
     };
 
     var hash = function(len){
@@ -925,8 +904,13 @@ $(document).ready(function(){
 
     var get_row_classname = function(){
         var classname;
-        if (app_vars.current_view === "library_view"){
-            classname = "item-row";
+        if (app_vars.current_view === "library_view" || app_vars.current_view === "playlist_view"){
+            if (app_vars.playing_view === "library_view"){
+                classname = "item-row";
+            }
+            else {
+                classname = "item-row.playlist-row";
+            }
         }
         else if (app_vars.current_view === "downloads_view"){
             classname = "download-row";
@@ -1015,7 +999,7 @@ $(document).ready(function(){
     };
 
     var add_item_row_listeners = function(){
-        $("#library_view")
+        elements.$library_view
         .on("dblclick",".item-row",function(){
             media_objects[$(this).getId()].click();
             // item_clicked($(this).getId());
@@ -1031,7 +1015,7 @@ $(document).ready(function(){
                     return;
                 }
                 if ($.inArray($row.getId(),app_vars.selected) === -1){
-                    item_selected([$row.getId()]);
+                    items_selected([$row.getId()]);
                 } else {
                     // nothing
                 }
@@ -1045,7 +1029,7 @@ $(document).ready(function(){
             }
             // left click (selected item)
             else {
-                var classname = get_row_classname();
+                var classname = "item-row";
                 if (event.which === 1){
                     var c;
                     var $items = [];
@@ -1060,10 +1044,10 @@ $(document).ready(function(){
                         else {
                             var $high = $("."+classname+".selected-row").last();
                             if ($row.index() > $low.index()){
-                                $items = $low.nextUntil($row);
+                                $items = $low.nextUntil($row,":visible");
                             }
                             else if ($row.index() < $low.index()){
-                                $items = $high.prevUntil($row);
+                                $items = $high.prevUntil($row,":visible");
                             }
                             else if ($row.index() === $low.index()){
                                 $items = $row;
@@ -1074,7 +1058,7 @@ $(document).ready(function(){
                         $.each($items,function(){
                             items.push($(this).getId());
                         });
-                        item_selected(items);
+                        items_selected(items);
                     // with ctrl key
                     }
                     else if (event.ctrlKey){
@@ -1088,14 +1072,14 @@ $(document).ready(function(){
                             var array_index = item_ids.indexOf(id);
                             item_ids.splice(array_index, 1);
                         } else {
-                            item_ids.push(id);
+                            item_ids.push(parseInt(id));
                         }
                         console.debug("new array");
                         console.debug(item_ids);
-                        item_selected(item_ids);
+                        items_selected(item_ids);
                     }
                     else {
-                        item_selected([$row.getId()]);
+                        items_selected([$row.getId()]);
                     }
                     event.preventDefault();
                 } else {
@@ -1153,10 +1137,11 @@ $(document).ready(function(){
             var playlist = $(this).data().playlistname;
             switch_view("playlist",function(){
                 $(".item-row").hide();
+                $(".pageview").hide();
+                elements.$library_view.show();
                 for (var c = 0; c < app_vars.playlists[playlist].length; c++){
-                    console.debug("adding: "+app_vars.playlists[playlist][c]);
-                    console.debug($("#library_view > div > #_media_"+app_vars.playlists[playlist][c]));
-                    $("#_media_"+app_vars.playlists[playlist][c]).show().addClass("playlist-item");
+                    console.debug("showing item: "+app_vars.playlists[playlist][c]+" in "+playlist+" playlist view");
+                    $("#_media_"+app_vars.playlists[playlist][c]).show().addClass("playlist-row");
                 }
             },$(this));
             app_vars.current_playlist = playlist;
@@ -1178,14 +1163,12 @@ $(document).ready(function(){
     set_item_objs();
     set_playlists();
 
-    console.debug("loaded "+app_vars.item_ids.length+" items");
-
     // --------------------------
     // Event Handlers
     // --------------------------
 
     // ContextMenu Code
-    $(".items-container , #contextmenu").on("contextmenu",function(){
+    $(".pageview, #contextmenu").on("contextmenu",function(){
         return false;
     });
 
@@ -1202,6 +1185,7 @@ $(document).ready(function(){
         else if ($this.attr('id') === 'edit_tags'){
 			hide_menu();
 			$("#edit_tags_confirm").text("Save changes");
+            $("#edit_failed_error").hide()
 			$("#selected_for_edit_count").text(app_vars.selected.length);
 			if (app_vars.selected.length === 1){
 				var obj = media_objects[app_vars.selected[0]].opts;
@@ -1211,6 +1195,7 @@ $(document).ready(function(){
 				$("#album_edit").val(obj.AlbumName);
 				$("#year_edit").val(obj.Year);
 				$("#genre_edit").val(obj.GenreName);
+                $("#multi_edit_warning").hide();
 			}
 			else {
 				$("#track_edit").val('').prop({disabled:true});
@@ -1218,6 +1203,7 @@ $(document).ready(function(){
 				$("#album_edit").val('');
 				$("#year_edit").val('');
 				$("#genre_edit").val('');
+                $("#multi_edit_warning").show();
 			}
 			if (app_vars.selected.length === 0){
 				throw new Error('cannot show edit tags page when no item has been selected');
@@ -1253,8 +1239,7 @@ $(document).ready(function(){
 			data.genre = $("#genre_edit").val();
 		}
 		if (Object.keys(data).length === 0){
-			alert("No data to change");
-			return;
+			$("#edit_failed_error").text("No data to change").show();
 		}
 		$.ajax({
 			url  : "xhr/edit_tags",
@@ -1271,11 +1256,13 @@ $(document).ready(function(){
 			}
 			else {
 				console.warn('Error - '+data.message);
+                $("#edit_failed_error").text("Error occured ("+data.message+")").show();
 				$button.text("Failed, Retry");
 			}
 		})
 		.fail(function(e){
 			$button.text("Failed, Retry");
+            $("#edit_failed_error").text("Unknown error occured!").show();
 			console.warn(e);
 		});
 	});
@@ -1439,7 +1426,7 @@ $(document).ready(function(){
         } else if (key === 85 && event.ctrlKey){ // Ctrl + u
             event.preventDefault();
         } else if (key === 65 && event.ctrlKey){
-            item_selected(app_vars.item_ids);
+            items_selected(app_vars.item_ids);
         }
         console.debug("KEY: "+key);
     })
@@ -1484,7 +1471,7 @@ $(document).ready(function(){
         }).fail(function(obj){
             console.debug(obj);
         });
-        //item_selected($row);
+        //items_selected($row);
         e.stopPropagation();
     });
     // End Rating Code
@@ -1547,6 +1534,8 @@ $(document).ready(function(){
     .on("click",function(){
         switch_view("queue_view",function(){
             $(".item-row").hide();
+            $(".pageview").hide();
+            elements.$library_view.show();
             for (var c = 0; c < app_vars.queue.length; c++){
                 $("#_media_"+app_vars.queue[c]).show().addClass("playlist-item");
             }
@@ -1556,7 +1545,7 @@ $(document).ready(function(){
     $("#library_sidebar_row").on("click",function(e){
         switch_view("library_view",function(){
             $(".pageview").hide();
-            $("#library_view").show();
+            elements.$library_view.show();
             $(".item-row").show();
         },$(this));
     });
@@ -1579,12 +1568,19 @@ $(document).ready(function(){
 
     // Sort items code
     $("#sort_menu > li").on("click",function(){
-        sort_items($(this).data('sortby'),app_vars.sort_order);
-        if (app_vars.sort_order === 1){
-            app_vars.sort_order = 0;
-        } else {
+        var sortby = $(this).data('sortby');
+        if (app_vars.sort_by === sortby){
+            if (app_vars.sort_order === 1){
+                app_vars.sort_order = 0;
+            } else {
+                app_vars.sort_order = 1;
+            }
+        }
+        else {
             app_vars.sort_order = 1;
         }
+        app_vars.sort_by = sortby;
+        sort_items(sortby,app_vars.sort_order);
     });
     // ---------------
 

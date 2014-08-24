@@ -81,25 +81,27 @@ class ItemList extends CI_Model {
 		}
 		if (isset($post['artist']) && !empty($post['artist'])){
 			$artist = $this->check_foreign($post['artist'],'ArtistName','artists');
-			$sql_section[] = " ArtistID = ".$this->db->escape($artist)." ";
+			$sql_section[] = " ArtistID = ".$this->db->escape_str($artist)." ";
 			$return['artist'] = $post['artist'];
 			$return['artistID'] = $artist;
 		}
 		if (isset($post['album']) && !empty($post['album'])){
 			$album = $this->check_foreign($post['album'],'AlbumName','albums');
-			$sql_section[] = " AlbumID = ".$this->db->escape($album)." ";
+			$sql_section[] = " AlbumID = ".$this->db->escape_str($album)." ";
 			$return['album'] = $post['album'];
 			$return['albumID'] = $album;
 		}
 		if (isset($post['genre']) && !empty($post['genre'])){
 			$genre = $this->check_foreign($post['genre'],'GenreName','genres');
-			$sql_section[] = " GenreID = ".$this->db->escape($genre)." ";
+			$sql_section[] = " GenreID = ".$this->db->escape_str($genre)." ";
 			$return['genre'] = $post['genre'];
 			$return['genreID'] = $genre;
 		}
+		if (!count($sql_section)){
+			return false;
+		}
 		$sql .= implode(",",$sql_section);
-		$sql .= " WHERE ID IN (".$this->db->escape(implode(",",$post['id'])).");";
-
+		$sql .= " WHERE music.ID IN (".implode(",",$this->db->escape_str($post['id'])).");";
 		$this->db->query($sql);
 		return $return;
 	}
