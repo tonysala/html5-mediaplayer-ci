@@ -102,7 +102,7 @@ html, body {
 #item_filter {
     font-size:12px!important;
     height: 28px;
-	margin: 1px -1px;
+	margin: 0px;
 }
 .item-row div, .current-track-container, .result-row div, .download-row div {
 	text-overflow: ellipsis;

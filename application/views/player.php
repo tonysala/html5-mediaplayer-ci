@@ -164,7 +164,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button typy="button" class="btn btn-default" id="identify_button">Identify (Beta)</button>
+				<button type="button" class="btn btn-default" id="identify_button">Identify (Beta)</button>
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
 			</div>

@@ -29,10 +29,6 @@ $(document).ready(function(){
         },
         results       : [],
         downloads     : [],
-        preview : {
-            on: false,
-            id : undefined
-        },
         default_engine: 'mp3li'
     };
 
@@ -57,9 +53,6 @@ $(document).ready(function(){
                 return opts.Filename.replace("/var/www/player",window.location.origin);
             },
             play: function(){
-                // make sure we reset any playing previews
-                $(".preview-button").text("Preview");
-                app_vars.preview.on = false;
                 var $ele = opts.$element;
                 // set some vars
                 var trackname = $ele.find(".trackname span").text();
@@ -304,14 +297,14 @@ $(document).ready(function(){
 				"data-playlistname":index.toLowerCase()
 			})
 			.append($("<span></span>")
-				.text(index.toUpperCase()+" PLAYLIST")
+				.text(index.toUpperCase()+" PLAYLIST ")
 			)
 			.append($("<span></span>")
 				.addClass("playlist-item-count")
 				.css({
 					"text-align":"right"
 				})
-				.text(" ("+value.length+")")
+				.text("("+value.length+")")
 			)
 		.insertAfter($("#queue_sidebar_row"));
 	}
@@ -360,12 +353,6 @@ $(document).ready(function(){
         $playpause_button.addClass("fa-pause");
         // resume the player
         player.play();
-        // resume the progress bar
-        //$(player).on("play",function(){
-            //elements.$progress_bar.animate(
-                //{ width: "100%" }, parseInt(player.duration - player.currentTime)*1000,"linear"
-            //);
-        //});
         start_seeker();
         // set status to 1 (playing)
         app_vars.status = 1;
@@ -779,10 +766,6 @@ $(document).ready(function(){
                 .addClass("download-row")
                 .removeClass("result-row")
             .prependTo("#downloads_view > div");
-
-            // remove the preview button
-            $download.find(".preview-button")
-                .remove();
         }
 
         if (!$download.length){
@@ -934,83 +917,9 @@ $(document).ready(function(){
         });
     };
 
-    var preview_item = function(id){
-        if (id === undefined){
-            throw new Error('id must not be undefined in preview_item(id) function');
-        }
-
-        var $result;
-        var $preview_button;
-
-        $result = $(".result-row").filter(function(index){
-            return (id === $(this).data('id'));
-        }).first();
-
-        if (!$result.length){
-            throw new Error('Failed to find the result row');
-        }
-
-        $preview_button = $result.find(".preview-button");
-
-        console.debug(app_vars.preview);
-
-        if (app_vars.preview.on && $result.data("id") === app_vars.preview.id){
-            pause_preview();
-            return;
-        }
-        if (!app_vars.preview.on && $result.data("id") === app_vars.preview.id){
-            app_vars.preview.on = true;
-            resume_item();
-            $preview_button.text("Pause");
-            return;
-        }
-        $(".preview-button").text("Preview");
-        // Reset the progress bar
-        reset_seeker();
-        if (app_vars.current !== undefined){
-            media_objects[app_vars.current].pause();
-        }
-        // Start preview code
-        app_vars.preview = {
-            on : false,
-            id : undefined
-        };
-        console.debug("Previewing "+$result.data('href')+" using "+$result.data('engine')+" engine");
-        $.ajax({
-            url  : "xhr/preview_item",
-            data : {
-                href   : $result.data('href'),
-                engine : $result.data('engine')
-            },
-            type : "get"
-        })
-        .fail(function(){
-            console.warn("failed to get preview link.");
-            $preview_button.text('Failed');
-        })
-        .done(function(link){
-            play_item(link);
-            app_vars.preview.on = true;
-            app_vars.preview.id = $result.data('id');
-            $preview_button.text("Pause");
-        });
-    };
-
-    var pause_preview = function(){
-        media_objects[app_vars.current].pause();
-        app_vars.preview = {
-            on : false,
-            id : undefined
-        };
-        $(".preview-button").text("Preview");
-    };
-
     var add_result_listeners = function(){
         $(".download-button").on("click",function(){
             download_item($(this).data("id"));
-        });
-        $(".preview-button").on("click",function(){
-            preview_item($(this).closest('.result-row').data('id'));
         });
     };
 
@@ -1085,10 +994,6 @@ $(document).ready(function(){
                                     .css({"line-height": "8px"})
                                 )
                                 //.text("Download")
-                            )
-                            .append($("<button></button>")
-                                .addClass("btn btn-default preview-button")
-                                .text("Preview")
                             )
                         )
                         .appendTo("#search_view > div");
@@ -1416,18 +1321,9 @@ $(document).ready(function(){
 
     $(player)
     .on("stalled",function(){
-        //if (app_vars.preview.on){
-            //pause_preview();
-        //}
-        //else {
-            //next_item();
-        //}
+
     })
     .on("ended", function(){
-        if (app_vars.preview.on){
-            pause_preview();
-            return;
-        }
         $.ajax({
             url : "xhr/played",
             data: {
@@ -1495,14 +1391,6 @@ $(document).ready(function(){
 
     elements.$control_playpause.on("click",function(){
         var $icon = $(this).find(".fa");
-        if (app_vars.preview.on){
-            pause_preview();
-            return;
-        }
-        if (app_vars.preview.id){
-            resume_item();
-            return;
-        }
         if (app_vars.status === 0){
             $icon.removeClass("fa-play");
             $icon.addClass("fa-pause");
