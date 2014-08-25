@@ -1,7 +1,7 @@
 $(document).ready(function(){
 
     // Define default settings
-    app_vars = {
+    var app_vars = {
 
         selected   : [],
         status     : 0,
@@ -34,7 +34,7 @@ $(document).ready(function(){
         $editing_playlist_name : undefined
     };
 
-    elements = {
+    var elements = {
         $progress_bar      : $("#progress_bar"),
         $track_pointer     : $("#track_pointer"),
         $control_playpause : $("#control_playpause"),
@@ -45,9 +45,9 @@ $(document).ready(function(){
     };
 
     // Cache the player element...
-    player = document.getElementById("_player");
+    var player = document.getElementById("_player");
 
-    MediaObject = function(opts){
+    var MediaObject = function(opts){
         var self = this;
         return {
             opts: opts,
@@ -190,7 +190,7 @@ $(document).ready(function(){
         };
     };
 
-    media_objects = {};
+    var media_objects = {};
 
     // Do setup stuff
     $.fn.getId = function(){
@@ -213,22 +213,57 @@ $(document).ready(function(){
         })
         .done(function(items){
             $.each(items,function(index,$item){
-                add_item_to_library($item, index);
+                var broken = false;
+                if ($item.Broken === true){
+                    broken = true;
+                }
+                add_item_to_library($item, index, broken);
             });
             update_library_count();
             add_item_row_listeners();
         });
     };
 
-    var add_item_to_library = function($item, index, status){
+    var add_item_to_library = function($item, index, broken){
         if ($item.ID === undefined || $item.ID === null){
             return undefined;
         }
-        if (typeof status === "undefined"){
-            status = "";
+        if (typeof broken === "undefined"){
+            broken = false;
+        }
+        var classname = "item-row";
+        var status = "";
+        var $last_col = $("<div></div>")
+            .addClass("col-xs-1 col-md-1 plays")
+            .attr({
+                title:$item.Plays
+            })
+            .append($("<span></span>")
+                .text($item.Plays)
+            );
+            
+        if (broken === true){
+            classname = "broken-item-row";
+            status = "fa-warning";
+            $last_col = $("<div></div>")
+                .addClass("col-xs-1 col-md-1 resultactions")
+                .append($("<button></button>")
+                    .addClass("btn btn-default delete-button")
+                    .data({
+                        id:$item.ID,
+                        md5:$item.FileMD5
+                    })
+                    .text("Delete ")
+                    .css({"line-height": "5px"})
+                    .append($("<i></i>")
+                        .addClass("fa fa-times")
+                        .css({"line-height": "5px"})
+                    )
+                    
+                )   
         }
         $element = $("<div></div>")
-			.addClass("row item-row")
+			.addClass("row "+classname)
 			.attr({
 				'draggable'   : true,
 				'data-rating' : $item.Rating,
@@ -268,15 +303,7 @@ $(document).ready(function(){
 					.text($item.AlbumName)
 				)
 			)
-			.append($("<div></div>")
-				.addClass("col-xs-1 col-md-1 plays")
-				.attr({
-					title:$item.Plays
-				})
-				.append($("<span></span>")
-					.text($item.Plays)
-				)
-			)
+			.append($last_col)
         .appendTo(elements.$library_view_inner);
 		app_vars.item_ids.push($item.ID);
 		// Add a hard link to the jQuery element to the item object
@@ -466,7 +493,7 @@ $(document).ready(function(){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
-        console.log($ele);
+        // console.log($ele);
         var $next = $ele.nextAll("."+get_play_row_classname()+":first");
         if ($next.length === 0){
             return get_first_id_in_order();
@@ -488,7 +515,7 @@ $(document).ready(function(){
         }
         var $ele = get_item_element_by_id(id);
         var $prev = $ele.prevAll("."+get_play_row_classname()+":first");
-        console.log($prev);
+        // console.log($prev);
         if ($prev.length === 0){
             return get_last_id_in_order();
         }
@@ -1052,7 +1079,6 @@ $(document).ready(function(){
                                     .addClass("fa fa-download")
                                     .css({"line-height": "8px"})
                                 )
-                                //.text("Download")
                             )
                         )
                         .appendTo("#search_view > div");
@@ -1180,6 +1206,33 @@ $(document).ready(function(){
         .on("dragend",".item-row",function(e){
             //console.debug(e);
         });
+
+        elements.$library_view
+        .on("dblclick",".broken-item-row",function(){
+            show_error_modal("This file is missing!<br> Please relink or delete this file.");
+        });
+
+        $(".delete-button").on("click",function(){
+            var md5 = $(this).data('md5');
+            var id = $(this).data('id');
+            if (!md5.length){
+                md5 = "_";
+            }
+            console.debug("removing, ID: "+$(this).data('id')+" MD5: "+md5);
+            get_item_element_by_id($(this).data('id')).remove();
+            $.ajax({
+                url : "xhr/delete_item",
+                data: {
+                    id : [id],
+                    md5 : [md5]
+                },
+                type: "get"
+            })
+            .done(function(data){
+                console.log(data);
+            });
+        });
+
     };
 
     var add_playlist_listeners = function(){
@@ -1233,6 +1286,42 @@ $(document).ready(function(){
             app_vars.$editing_playlist_name = undefined;
         });
     };
+
+    var client_download_files = function(){
+        var files = [];
+        var download_limit = 10;
+        $.each(app_vars.selected,function(){
+            var file = {
+                "path" : media_objects[this].opts.Filename,
+                "name" : media_objects[this].opts.TrackName
+            }
+            files.push(file);
+        });
+        if (files.length){
+            if (files.length <= download_limit){
+                $("#download_request_form")
+                    .empty()
+                    .append($("<input></input>")
+                        .attr({
+                            name  : "files",
+                            value : JSON.stringify(files)
+                        })
+                    )
+                .submit();
+            }
+            else {
+                show_error_modal("You may only download up to "+download_limit+" files at a time.");
+            }
+        }
+        else {
+            show_error_modal("You must select a file to download.");
+        }
+    };
+
+    var show_error_modal = function(error){
+        $("#error_modal").find(".alert").html("<i class='fa fa-warning'></i> <strong>"+error+"</strong>");
+        $("#error_modal").modal();
+    }
     // --------------------------
     // End of functions
     // --------------------------
@@ -1572,6 +1661,7 @@ $(document).ready(function(){
     $(document)
     .on("keydown",function(event) {
         var key = event.keyCode;
+        // Editing the playlist name capture all keystrokes
         if (app_vars.$editing_playlist_name !== undefined){
             console.log(key);
             if (key === 13){
@@ -1591,10 +1681,49 @@ $(document).ready(function(){
             event.preventDefault();
         } else if (key === 85 && event.ctrlKey){ // Ctrl + u
             event.preventDefault();
-        } else if (key === 65 && event.ctrlKey){
+        } else if (key === 65 && event.ctrlKey){ // Ctrl + a
             items_selected(app_vars.item_ids);
+        } else if (key === 40 || key === 38){ // Down key || Up key
+            event.preventDefault();
+            var id;
+            if (key === 40){ // Down
+                // console.log("down key");
+                if (app_vars.selected.length === 0){
+                    id = get_first_id_in_order();
+                }
+                else {
+                    id = $("."+get_view_row_classname()+".selected-row:visible:last").getId();
+                    id = get_next_id_in_order(id);
+                }
+            }
+            else { // Up
+                // console.log("up key");
+                if (app_vars.selected.length === 0){
+                    id = get_last_id_in_order();
+                }
+                else {
+                    id = $("."+get_view_row_classname()+".selected-row:visible:first").getId();
+                    id = get_prev_id_in_order(id);
+                }
+            }
+            items_selected([id]);
+            media_objects[id].show();
+        } else if (key === 68 && event.ctrlKey){ // Ctrl + d
+            event.preventDefault();
+            $("#find_new_sidebar_row").trigger("click");
+        } else if (key === 13) { // Enter
+            if (app_vars.selected.length > 0){
+                if (app_vars.selected.length === 1){
+                    $(".item-row.selected-row").trigger("dblclick");
+                }
+                else {
+                    add_to_queue();
+                }
+            }
+        } else if (key === 76 && event.ctrlKey){
+            $("#library_sidebar_row").trigger("click");
         }
-        // console.debug("KEY: "+key);
+        console.debug("key ["+key+"]");
     })
     .on("keyup",function(event){
 
@@ -1800,7 +1929,12 @@ $(document).ready(function(){
         })
         .fail(function(data){
             $("#identify_button").text("Failed");
+            show_error_modal("Could not analyse track.");
         });
+    });
+    
+    $("#client_download_button").on("click",function(){
+        client_download_files();
     });
 
 });

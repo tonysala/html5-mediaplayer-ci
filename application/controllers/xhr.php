@@ -127,6 +127,41 @@ class Xhr extends CI_Controller {
 		}
 	}
 
+	public function client_download(){
+		$files = $this->input->post("files");
+		if ($files !== false){
+			$files = json_decode($files);
+			if (count($files) === 1){
+				$this->load->helper('download');
+				force_download($files[0]->name.".mp3",file_get_contents($files[0]->path));
+			}
+			else if (count($files) > 1){
+				// create object
+				$zip = new ZipArchive();
+				// open archive
+				$zipname = "/tmp/".md5(microtime(true));
+				if ($zip->open($zipname, ZIPARCHIVE::CREATE) !== true) {
+					print json_encode(["error"=>true,"message"=>"could not prepare files for download"]);
+					exit;
+				}
+				// close and save archive
+				foreach($files as $file){
+					$file->name = preg_replace("/[^A-Za-z0-9 ]/", '', $file->name);
+					$zip->addFile($file->path, $file->name.".mp3");
+				}
+				$zip->close();
+				$this->load->helper('download');
+				force_download("music.zip",file_get_contents($zipname));
+			}
+			else {
+				print json_encode(["error"=>true,"message"=>"no files specified"]);
+			}
+		}
+		else {
+			print json_encode(["error"=>true,"message"=>"missing parameters"]);
+		}
+	}
+
 	public function set_rating(){
 		if (($ids = $this->input->get("ids")) && ($rating = $this->input->get("rating"))){
 			$ids = json_decode($ids);
@@ -284,4 +319,6 @@ class Xhr extends CI_Controller {
 			print json_encode(array("error"=>true,"message"=>"no query provided."));
 		}
 	}
+
+
 }

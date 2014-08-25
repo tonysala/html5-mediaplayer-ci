@@ -30,11 +30,11 @@ html, body {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 }
-.item-row , .header-row, .result-row, .download-row {
-    transition: all 0.4s ease;
+.item-row , .header-row, .result-row, .download-row, .broken-item-row {
+/*    transition: all 0.4s ease;
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
-    -o-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;*/
 	padding:0;
 	border-top: 1px solid #FFFFFF;
 	border-bottom: 1px solid #ECECEC;
@@ -48,10 +48,10 @@ html, body {
 	padding:6px 0;
 }
 .selected-row {
-    transition: all 0.4s ease;
+/*    transition: all 0.4s ease;
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
-    -o-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;*/
 	border-top: 1px solid #2271A5;
 	border-bottom: 1px solid #2576AC;
 	background: #3A9ADA;
@@ -59,10 +59,10 @@ html, body {
 	text-shadow: 1px 1px #2576AC;
 }
 .item-row.dark , .header-row.dark {
-    transition: all 0.4s ease;
+/*    transition: all 0.4s ease;
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
-    -o-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;*/
     border-top: 1px solid #727272;
     border-bottom: 1px solid #202020;
     background: #424242;
@@ -87,7 +87,7 @@ html, body {
     color: white;
     height: 30px;
 }
-.download-button , .preview-button {
+.download-button , .preview-button, .delete-button {
 	height: 20px;
 	margin: 2px;
 	line-height: 6px!important;
@@ -104,7 +104,7 @@ html, body {
     height: 28px;
 	margin: 0px;
 }
-.item-row div, .current-track-container, .result-row div, .download-row div {
+.item-row div, .current-track-container, .result-row div, .download-row div, .broken-row div {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	overflow: hidden;
@@ -415,7 +415,7 @@ img#cover_art_image:hover {
 }
 .compact-modal .modal-footer {
 	padding: 10px;
-	magin-top:5px;
+	margin-top:5px;
 }
 .compact-modal .alert {
 	padding: 8px 15px;

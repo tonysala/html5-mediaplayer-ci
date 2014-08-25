@@ -26,6 +26,7 @@ class MediaObject {
 	public $SplFile = null;
 	public $id3_info = null;
 	public $tags = [];
+	public $Broken = false;
 	// public $CI;
 
 	private $defaults = array(

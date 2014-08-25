@@ -83,7 +83,7 @@
 								<li data-sortby='albumname'><a href="#">Album</a></li>
 								<li data-sortby='plays'><a href="#">Plays</a></li>
 							</ul>
-							<button type="button" class="btn btn-default" id="shuffle" title='Shuffle'><i class="fa fa-sort-alpha-asc"></i></button>
+							<button type="button" class="btn btn-default" id="client_download_button" title='Download'><i class="fa fa-cloud-download"></i></button>
 						</div>
 						<input type="text" id="item_filter" class="form-control <?=$skin?>" placeholder="Search tracks...">
 					</div>
@@ -193,3 +193,22 @@
 		</div>
 	</div>
 </div>
+<div class="modal fade" id="error_modal">
+	<div class="modal-dialog modal-sm compact-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<h5 class="modal-title">Error Occured!</h5>
+			</div>
+			<div class="modal-body">
+				<div class="alert alert-danger" style="display:block;"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+			</div>
+		</div>
+	</div>
+</div>
+<form action="xhr/client_download" method="post" id="download_request_form">
+
+</form>

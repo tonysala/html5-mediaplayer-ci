@@ -158,7 +158,8 @@ class ItemList extends CI_Model {
 				try {
 					$result = new MediaObject($result);
 				} catch (MediaObjectException $e){
-					unset($results[$k]);
+					// unset($results[$k]);
+					$result->Broken = true;
 				}
 			};
 			array_values($results);
