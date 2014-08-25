@@ -223,7 +223,7 @@ class ItemList extends CI_Model {
 					. " WHERE FileMD5='".$md5."';");
 			}
 			if ($feedback){
-				print "<script>console.log('Writing: ".$count."/479 New: ".$result."')</script>";
+				print "<script>console.log('Writing: ".$count."/479 New: ".count($result)."')</script>";
 				flush();
 				ob_flush();
 			}
