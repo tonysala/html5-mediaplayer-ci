@@ -69,9 +69,7 @@ class Xhr extends CI_Controller {
 	}
 
 	public function scan_dir(){
-		$this->set_json_out();
 		$this->itemlist->full_scan_and_write();
-		print json_encode("done");
 	}
 
 	public function get_url(){
