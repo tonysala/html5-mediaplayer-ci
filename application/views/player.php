@@ -109,7 +109,7 @@
 		</div>
 	</div>
 </div>
-<audio style="display:none;" id="_player" autoplay preload>
+<audio style="display:none;" id="_player" autoplay>
     <source src='' type='audio/mpeg'>
 </audio>
 <ul id="contextmenu" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
@@ -153,13 +153,23 @@
 				<div class="row">
 					<div class="col-xs-6">
 						<span>Track:</span>
+						<input type="text" class="form-control" id="track_orig" disabled/>
+						<span>Album:</span>
+						<input type="text" class="form-control" id="album_orig" disabled/>
+						<span>Genre:</span>
+						<input type="text" class="form-control" id="genre_orig" disabled/>
+						<span>Artist:</span>
+						<input type="text" class="form-control" id="artist_orig" disabled/>
+						<span>Year Released:</span>
+						<input type="text" class="form-control" id="year_orig" disabled/>
+					</div>
+					<div class="col-xs-6">
+					<span>Track:</span>
 						<input type="text" class="form-control" id="track_edit"/>
 						<span>Album:</span>
 						<input type="text" class="form-control" id="album_edit"/>
 						<span>Genre:</span>
 						<input type="text" class="form-control" id="genre_edit"/>
-					</div>
-					<div class="col-xs-6">
 						<span>Artist:</span>
 						<input type="text" class="form-control" id="artist_edit"/>
 						<span>Year Released:</span>
@@ -168,8 +178,12 @@
 				</div>
 			</div>
 			<div class="modal-footer">
+				<div class="btn-group" style="margin-right: 5px;">
+	                <button type="button" class="btn btn-default modal-footer-btn" id="edit_modal_prev" title='Previous Item'><i class="fa fa-arrow-left"></i></button>
+	                <button type="button" class="btn btn-default modal-footer-btn" id="edit_modal_next" title='Next Item'><i class="fa fa-arrow-right"></i></button>
+	            </div>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				<button type="button" class="btn btn-default" id="identify_button">Identify Track</button>
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
 			</div>
 		</div>

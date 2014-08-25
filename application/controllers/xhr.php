@@ -50,7 +50,7 @@ class Xhr extends CI_Controller {
 			}
 		}
 		else {
-			$return = ["error"=>true,"affected"=>0,"message"=>"missing parameters"];
+			$return = ["error"=>true,"affected"=>0,"message"=>"Missing parameters"];
 		}
 		print json_encode($return);
 	}
@@ -58,12 +58,16 @@ class Xhr extends CI_Controller {
 	public function edit_tags(){
 		$post = $this->input->post();
 		$this->set_json_out();
-		$changes = $this->itemlist->write_tags($post);
-		if (!empty($changes)){
-			print json_encode(['error'=>false,'updated'=>$changes]);
-		}
-		else {
-			print json_encode(['error'=>true,'message'=>'error occured updating record']);
+		if ($post){
+			$changes = $this->itemlist->write_tags($post);
+			if (!empty($changes)){
+				print json_encode(['error'=>false,'updated'=>$changes]);
+			}
+			else {
+				print json_encode(['error'=>true,'message'=>'Error occured updating record']);
+			}
+		} else {
+			print json_encode(['error'=>true,'message'=>'No changes to be made']);
 		}
 		exit;
 	}

@@ -48,7 +48,6 @@ $(document).ready(function(){
     var player = document.getElementById("_player");
 
     var MediaObject = function(opts){
-        var self = this;
         return {
             opts: opts,
             url: function(){
@@ -64,7 +63,7 @@ $(document).ready(function(){
                 // change the current track text
                 set_current_track_text("Playing: <b>"+trackname+" - "+artistname+"</b>");
                 // set current item variable
-                app_vars.current = parseInt(opts.ID);
+                app_vars.current = parseInt(opts.ID,10);
                 // remove all item status icons
                 $(".item-row .row-status").removeClass("fa-pause fa-play fa-asterisk");
                 // set the current item status icon to pause icon
@@ -127,10 +126,10 @@ $(document).ready(function(){
                 }
                 this.select();
                 // if we clicked the current playing item, pause the player
-                if (parseInt(app_vars.current) === parseInt(opts.ID) && app_vars.status === 1){
+                if (parseInt(app_vars.current,10) === parseInt(opts.ID,10) && app_vars.status === 1){
                     this.pause();
                 // if we clicked the current paused item resume the player
-                } else if (parseInt(app_vars.current) === parseInt(opts.ID)){
+                } else if (parseInt(app_vars.current,10) === parseInt(opts.ID,10)){
                     resume_item();
                 // else load the new item
                 } else {
@@ -142,8 +141,8 @@ $(document).ready(function(){
             },
             select: function(){
                 // check if this item is already in the selected array
-                if ($.inArray(parseInt(opts.ID),app_vars.selected) === -1){
-                    app_vars.selected.push(parseInt(opts.ID));
+                if ($.inArray(parseInt(opts.ID,10),app_vars.selected) === -1){
+                    app_vars.selected.push(parseInt(opts.ID,10));
                     opts.$element.addClass("selected-row");
                 }
             },
@@ -197,10 +196,7 @@ $(document).ready(function(){
         var $this = $(this);
         if ($this.hasClass("item-row") || $this.hasClass("result-row")){
             var id = $this.prop('id');
-            return parseInt(id.substring(id.lastIndexOf("_") + 1));
-        }
-        else {
-            return undefined;
+            return parseInt(id.substring(id.lastIndexOf("_") + 1),10);
         }
     };
 
@@ -213,23 +209,19 @@ $(document).ready(function(){
         })
         .done(function(items){
             $.each(items,function(index,$item){
-                var broken = false;
-                if ($item.Broken === true){
-                    broken = true;
-                }
-                add_item_to_library($item, index, broken);
+                add_item_to_library($item, index);
             });
             update_library_count();
             add_item_row_listeners();
         });
     };
 
-    var add_item_to_library = function($item, index, broken){
+    var add_item_to_library = function($item, index){
         if ($item.ID === undefined || $item.ID === null){
             return undefined;
         }
-        if (typeof broken === "undefined"){
-            broken = false;
+        if (typeof $item.Broken === "undefined"){
+            $item.Broken = false;
         }
         var classname = "item-row";
         var status = "";
@@ -242,7 +234,7 @@ $(document).ready(function(){
                 .text($item.Plays)
             );
             
-        if (broken === true){
+        if ($item.Broken === true){
             classname = "broken-item-row";
             status = "fa-warning";
             $last_col = $("<div></div>")
@@ -262,7 +254,7 @@ $(document).ready(function(){
                     
                 )   
         }
-        $element = $("<div></div>")
+        var $element = $("<div></div>")
 			.addClass("row "+classname)
 			.attr({
 				'draggable'   : true,
@@ -308,7 +300,7 @@ $(document).ready(function(){
 		app_vars.item_ids.push($item.ID);
 		// Add a hard link to the jQuery element to the item object
 		$item.$element = $element;
-		media_objects[$item.ID] = MediaObject($item);
+		media_objects[$item.ID] = new MediaObject($item);
     };
 
     var set_playlists = function(){
@@ -337,7 +329,7 @@ $(document).ready(function(){
 					},
 					type: "get"
 				})
-				.done(function(data){
+				.done(function(){
 					app_vars.playlists[playlist_name] = items;
 					create_playlist_link(playlist_name,items);
 					add_playlist_listeners();
@@ -356,7 +348,7 @@ $(document).ready(function(){
 		else {
 			console.warn("No playlist name provided");
 		}
-	}
+	};
 
 	var create_playlist_link = function(index,value){
 		$("<div></div>")
@@ -385,7 +377,7 @@ $(document).ready(function(){
                 .text(index)
             )
         .appendTo($("#playlist_list"));
-	}
+	};
 
     var save_playlist = function(playlist){
         $.ajax({
@@ -399,7 +391,7 @@ $(document).ready(function(){
         .done(function(e){
             console.log(e);
         });
-    }
+    };
 
     var items_selected = function(items){
         var classname = get_view_row_classname();
@@ -412,7 +404,7 @@ $(document).ready(function(){
         app_vars.selected = [];
         // add items to the selected array
         $.each(items,function(){
-            media_objects[parseInt(this)].select();
+            media_objects[parseInt(this,10)].select();
         });
         // sort the selected array by id smallest to largest
         app_vars.selected.sort(function(a, b){return a-b;});
@@ -488,36 +480,76 @@ $(document).ready(function(){
         return app_vars.item_ids.indexOf(id);
     };
 
-    var get_next_id_in_order = function(id){
+    var get_next_id_in_order = function(id,view,filter){
+        var classname;
+        if (typeof view === "boolean"){
+            classname = view ? get_view_row_classname() : get_play_row_classname();
+        } else {
+            view = false;
+            classname = get_play_row_classname();
+        }
+        if (typeof filter === "undefined"){
+            filter = "";
+        }
         if (id === undefined){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
         // console.log($ele);
-        var $next = $ele.nextAll("."+get_play_row_classname()+":first");
+        var $next = $ele.nextAll("."+classname+filter+":first");
         if ($next.length === 0){
-            return get_first_id_in_order();
+            return get_first_id_in_order(view,filter);
         }
         return $next.getId();
     };
 
-    var get_first_id_in_order = function(){
-        return $("."+get_play_row_classname()).first().getId();
+    var get_first_id_in_order = function(view,filter){
+        var classname;
+        if (typeof view === "boolean"){
+            classname = view ? get_view_row_classname() : get_play_row_classname();
+        } else {
+            view = false;
+            classname = get_play_row_classname();
+        }
+        if (typeof filter === "undefined"){
+            filter = "";
+        }
+        return $("."+classname+filter).first().getId();
     };
 
-    var get_last_id_in_order = function(){
-        return $("."+get_play_row_classname()).last().getId();
+    var get_last_id_in_order = function(view,filter){
+        var classname;
+        if (typeof view === "boolean"){
+            classname = view ? get_view_row_classname() : get_play_row_classname();
+        } else {
+            view = false;
+            classname = get_play_row_classname();
+        }
+        if (typeof filter === "undefined"){
+            filter = "";
+        }
+        return $("."+classname+filter).last().getId();
     };
 
-    var get_prev_id_in_order = function(id){
+    var get_prev_id_in_order = function(id,view,filter){
+        var classname;
+        if (typeof view === "boolean"){
+            classname = view ? get_view_row_classname() : get_play_row_classname();
+        } else {
+            view = false;
+            classname = get_play_row_classname();
+        }
+        if (typeof filter === "undefined"){
+            filter = "";
+        }
         if (id === undefined){
             throw new Error('id must not be undefined in get_next_id_in_order(id)');
         }
         var $ele = get_item_element_by_id(id);
-        var $prev = $ele.prevAll("."+get_play_row_classname()+":first");
+        var $prev = $ele.prevAll("."+classname+filter+":first");
         // console.log($prev);
         if ($prev.length === 0){
-            return get_last_id_in_order();
+            return get_last_id_in_order(view,filter);
         }
         return $prev.getId();
     };
@@ -690,20 +722,6 @@ $(document).ready(function(){
         }
     };
 
-    window.echonest_analyse = function(id){
-        var file = encodeURIComponent(media_objects[id].url());
-        var api_key = encodeURIComponent("RDJJ0FGRTN5AAE889");
-        var endpoint = "http://developer.echonest.com/api/v4/track/upload/";
-        var params = "?api_key="+api_key+"&format=jsonp&url="+file+"&callback="+encodeURIComponent("echonest_cb");
-
-        var url = endpoint + params;
-        $("<script></script>").attr({src:url}).appendTo($("head"));
-    }
-
-    window.echonest_cb = function(data){
-        console.log(data);
-    }
-
     var move_slider_pointer = function(pageX){
         var start = $(".slider-line").offset().left;
         var width = $(".slider-line").width() - 4;
@@ -754,7 +772,7 @@ $(document).ready(function(){
     var add_to_queue = function(){
         for (var c = 0; c < app_vars.selected.length; c++){
             if ($.inArray(app_vars.selected[c],app_vars.queue) === -1){
-                app_vars.queue.push(parseInt(app_vars.selected[c]));
+                app_vars.queue.push(parseInt(app_vars.selected[c],10));
             }
         }
         update_queue_count();
@@ -774,7 +792,7 @@ $(document).ready(function(){
 
 	var update_library_count = function(){
 		$("#library_item_count").text("("+app_vars.item_ids.length+")");
-	}
+	};
 
     var sort_items = function(by, asc){
         var $items = $("."+get_view_row_classname());
@@ -901,7 +919,7 @@ $(document).ready(function(){
                 }
             }
         })
-        .fail(function(){
+        .fail(function(e){
             $result_button.html("")
                 .append($('<i></i>')
                 .addClass('fa fa-warning')
@@ -914,13 +932,14 @@ $(document).ready(function(){
             );
             $result_button.prop('disabled',false);
             $download_button.prop('disabled',false);
+            show_error_modal("Error downloading file!");
         })
         .done(function(response){
             console.log(response);
             response = response.substring(response.lastIndexOf('|') + 1);
             var message = '';
             if (response === "" || response === undefined){
-				message = 'no data recieved';
+				message = 'No data recieved!';
 			}
 			else {
 				var json_response = JSON.parse(response);
@@ -935,7 +954,7 @@ $(document).ready(function(){
 					}
 				}
 				else {
-					message = 'malformed data recieved';
+					message = 'Malformed data response!';
 				}
 			}
 			if (message === ''){
@@ -968,6 +987,7 @@ $(document).ready(function(){
 	            $result_button.prop('disabled',false);
 	            $download_button.prop('disabled',false);
 	            console.warn(message);
+                show_error_modal(message);
 			}
         })
         .always(function(){
@@ -1021,7 +1041,7 @@ $(document).ready(function(){
             classname = "result-row";
         }
         return classname;
-    }
+    };
 
     var get_files = function(query,callback){
         if (typeof $search_request !== 'undefined'){
@@ -1178,7 +1198,7 @@ $(document).ready(function(){
                             var array_index = item_ids.indexOf(id);
                             item_ids.splice(array_index, 1);
                         } else {
-                            item_ids.push(parseInt(id));
+                            item_ids.push(parseInt(id,10));
                         }
                         console.debug("new array");
                         console.debug(item_ids);
@@ -1318,10 +1338,51 @@ $(document).ready(function(){
         }
     };
 
+    var show_edit_tags_modal = function(){
+        hide_menu();
+        $("#edit_tags_confirm").text("Save changes");
+        $("#edit_failed_error").hide()
+        $("#selected_for_edit_count").text(app_vars.selected.length);
+        if (app_vars.selected.length === 1){
+            var obj = media_objects[app_vars.selected[0]].opts;
+            console.log(obj);
+            $("#track_orig").val(obj.TrackName);
+            $("#artist_orig").val(obj.ArtistName);
+            $("#album_orig").val(obj.AlbumName);
+            $("#year_orig").val(obj.Year);
+            $("#genre_orig").val(obj.GenreName);
+            $("#multi_edit_warning").hide();
+            $("#identify_button").text("Identify Tracks").prop({disabled:false});
+            $("#track_edit").val('').prop({disabled:false}).removeClass("success");
+            $("#artist_edit").val('').removeClass("success");
+            $("#album_edit").val('').removeClass("success");
+            $("#year_edit").val('').removeClass("success");
+            $("#genre_edit").val('').removeClass("success");
+        }
+        else if (app_vars.selected.length > 1){
+            $("#identify_button").text("Identify Track").prop({disabled:true});
+            $("#track_orig").val('');
+            $("#artist_orig").val('');
+            $("#album_orig").val('');
+            $("#year_orig").val('');
+            $("#genre_orig").val('');
+            $("#multi_edit_warning").show();
+            $("#track_edit").val('').prop({disabled:true}).removeClass("success");
+            $("#artist_edit").val('').removeClass("success");
+            $("#album_edit").val('').removeClass("success");
+            $("#year_edit").val('').removeClass("success");
+            $("#genre_edit").val('').removeClass("success");
+        } 
+        else {
+            throw new Error('cannot show edit tags page when no item has been selected');
+        }
+        $("#id3_modal").modal({});
+    };
+
     var show_error_modal = function(error){
         $("#error_modal").find(".alert").html("<i class='fa fa-warning'></i> <strong>"+error+"</strong>");
         $("#error_modal").modal();
-    }
+    };
     // --------------------------
     // End of functions
     // --------------------------
@@ -1357,36 +1418,8 @@ $(document).ready(function(){
             }
         }
         else if ($this.attr('id') === 'edit_tags'){
-			hide_menu();
-			$("#edit_tags_confirm").text("Save changes");
-            $("#edit_failed_error").hide()
-			$("#selected_for_edit_count").text(app_vars.selected.length);
-			if (app_vars.selected.length === 1){
-				var obj = media_objects[app_vars.selected[0]].opts;
-				console.log(obj);
-				$("#track_edit").val(obj.TrackName).prop({disabled:false});
-                $("#artist_edit").val(obj.ArtistName);
-                $("#album_edit").val(obj.AlbumName);
-                $("#year_edit").val(obj.Year);
-                $("#genre_edit").val(obj.GenreName);
-                $("#multi_edit_warning").hide();
-                $("#identify_button").text("Identify Track").prop({disabled:false});
-            }
-            else {
-                $("#identify_button").text("Identify Track").prop({disabled:true});
-				$("#track_edit").val('').prop({disabled:true});
-				$("#artist_edit").val('');
-				$("#album_edit").val('');
-				$("#year_edit").val('');
-				$("#genre_edit").val('');
-                $("#multi_edit_warning").show();
-			}
-			if (app_vars.selected.length === 0){
-				throw new Error('cannot show edit tags page when no item has been selected');
-			}
-			else {
-				$("#id3_modal").modal({});
-			}
+			$("#id3_modal").addClass("fade");
+            show_edit_tags_modal();
 		}
         else if ($this.attr('id') === 'delete_item'){
             var data = {
@@ -1401,21 +1434,21 @@ $(document).ready(function(){
                 // remove element(s) and all trace of element(s)
                 obj.opts.$element.remove();
                 // remove from item_ids array
-                var index = app_vars.item_ids.indexOf(parseInt(obj.opts.ID));
+                var index = app_vars.item_ids.indexOf(parseInt(obj.opts.ID,10));
                 app_vars.item_ids.splice(index, 1);                
                 // remove from history (if found)
-                var h_index = app_vars.history.items.indexOf(parseInt(obj.opts.ID));
+                var h_index = app_vars.history.items.indexOf(parseInt(obj.opts.ID,10));
                 if (h_index !== -1){
                     app_vars.history.items.splice(h_index, 1);
                     app_vars.history.pointer--;
                 }
                 // remove from queue (if found)
-                var q_index = app_vars.queue.indexOf(parseInt(obj.opts.ID));
+                var q_index = app_vars.queue.indexOf(parseInt(obj.opts.ID,10));
                 if (q_index !== -1){
                     app_vars.queue.splice(q_index, 1);
                 }
                 // unset as current (if set)
-                if (app_vars.current === parseInt(obj.opts.ID)){
+                if (app_vars.current === parseInt(obj.opts.ID,10)){
                     app_vars.current = undefined;
                     if (app_vars.status === 1){
                         next_item();
@@ -1425,7 +1458,7 @@ $(document).ready(function(){
                 // remove from any playlist
                 $.each(app_vars.playlists,function(key,value){
                     console.log(key);
-                    var index = app_vars.playlists[key].indexOf(parseInt(obj.opts.ID));
+                    var index = app_vars.playlists[key].indexOf(parseInt(obj.opts.ID,10));
                     if (index !== -1){
                         app_vars.playlists[key].splice(index, 1);
                         save_playlist(key);
@@ -1444,7 +1477,7 @@ $(document).ready(function(){
                 type: "get"
             })
             .done(function(data){
-                console.log(data);
+            
             });
         }
     });
@@ -1453,11 +1486,8 @@ $(document).ready(function(){
 	// Edit tags code
 	$("#edit_tags_confirm").on("click", function(){
 		$button = $(this);
-		$button.text("loading...");
 		var sel = app_vars.selected;
-		var data = {
-			id : sel
-		};
+		var data = {};
 		if ($("#track_edit").val() !== ""){
 			data.track = $("#track_edit").val();
 		}
@@ -1474,15 +1504,17 @@ $(document).ready(function(){
 			data.genre = $("#genre_edit").val();
 		}
 		if (Object.keys(data).length === 0){
-			$("#edit_failed_error").text("No data to change").show();
+            $("#id3_modal").modal('hide');
+            return;
 		}
+        data.id = sel;
+        $button.text("Loading...");
 		$.ajax({
 			url  : "xhr/edit_tags",
 			data : data,
 			type : "post"
 		})
 		.done(function(data){
-			console.log(data);
 			if (data.error === false){
 				$("#id3_modal").modal('hide');
 				for (var c = 0; c < sel.length; c++){
@@ -1743,7 +1775,7 @@ $(document).ready(function(){
         set_rating(rating);
     })
     .on("click",function(e){
-        var rating = parseInt($(this).index() + 1);
+        var rating = parseInt($(this).index() + 1,10);
         var $row, id = [];
         if (app_vars.selected.length < 1){
 			throw new Error('One or more items need to be selected to set rating.');
@@ -1814,7 +1846,7 @@ $(document).ready(function(){
         console.debug("adding to queue");
         for (var c = 0;c < app_vars.moving.length; c++){
             if ($.inArray(app_vars.moving[c],app_vars.queue) === -1){
-                app_vars.queue.unshift(parseInt(app_vars.moving[c]));
+                app_vars.queue.unshift(parseInt(app_vars.moving[c],10));
                 // ajax code
                 console.debug("item added to queue: "+app_vars.moving[c]);
             } else {
@@ -1896,7 +1928,7 @@ $(document).ready(function(){
     $("#identify_button").on("click",function(){
         var md5 = media_objects[app_vars.selected[0]].opts.FileMD5;
         var $button = $(this);
-        $button.text("Analysing...");
+        $button.text("Analysing...").prop({disabled:true});
         $.ajax({
             url: "xhr/analyse_file",
             data: {
@@ -1906,35 +1938,61 @@ $(document).ready(function(){
             dataType: "json"
         })
         .done(function(data){
-            $("#identify_button").text("Done");
-            // console.log(data.response);
+            console.log(data.response);
             if (data.response.status.code !== 0){
                 console.warn(data.response.status.message);
+                $("#identify_button").text("Failed [Error "+data.response.status.code+"]").prop({disabled:true});
             }
             else if (typeof data.response.track === "object"){
+                if (data.response.track.status === "pending"){
+                    $("#identify_button").text("Retry for better accuracy").prop({disabled:false});
+                }
+                else {
+                    $("#identify_button").text("Done.").prop({disabled:true});
+                }
                 console.log(data.response.track);
                 $track_edit = $("#track_edit");
                 $artist_edit = $("#artist_edit");
                 $album_edit = $("#album_edit");
-                if ((!$track_edit.val().length || $track_edit.val() === "-") && data.response.track.title !== ""){
-                    $track_edit.val(data.response.track.title);
+                if (data.response.track.title.length){
+                    $track_edit.val(data.response.track.title).addClass("success");
                 }
-                if ((!$artist_edit.val().length || $artist_edit.val() === "-") && data.response.track.artist !== ""){
-                    $artist_edit.val(data.response.track.artist);
+                if (data.response.track.artist.length){
+                    $artist_edit.val(data.response.track.artist).addClass("success");
                 }
-                if ((!$album_edit.val().length || $album_edit.val() === "-") && data.response.track.release !== ""){
-                    $album_edit.val(data.response.track.release);
+                if (data.response.track.release.length){
+                    $album_edit.val(data.response.track.release).addClass("success");
                 }
             }
         })
         .fail(function(data){
-            $("#identify_button").text("Failed");
+            $("#identify_button").text("Failed").prop({disabled:false});
             show_error_modal("Could not analyse track.");
         });
     });
     
     $("#client_download_button").on("click",function(){
         client_download_files();
+    });
+
+    $("#edit_modal_next").on("click",function(){
+        console.log("next modal");
+        var next = get_next_id_in_order(app_vars.selected[0],true,":visible");
+        items_selected([next]);
+        $("#id3_modal").one("hidden.bs.modal",function(){
+            show_edit_tags_modal();
+        });
+        $("#id3_modal").removeClass("fade").modal('hide');
+    });
+
+    $("#edit_modal_prev").on("click",function(){
+        console.log("prev modal");
+        var next = get_prev_id_in_order(app_vars.selected[0],true,":visible");
+        items_selected([next]);
+        $("#id3_modal").one("hidden.bs.modal",function(){
+            show_edit_tags_modal();
+        });
+        $("#id3_modal").removeClass("fade").modal('hide');
     });
 
 });

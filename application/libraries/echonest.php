@@ -7,11 +7,11 @@ class EchoNestException extends Exception{}
 class EchoNest {
 
 	private $api_key = "RDJJ0FGRTN5AAE889";
-	private $endpoint = "http://developer.echonest.com/api/v4/track/upload?";
 
 	public function analyse_file($file){
 		
-		print `curl -X POST "http://developer.echonest.com/api/v4/track/upload" -d "api_key={$this->api_key}&url=http://tronfo.com/tracks/{$file}.mp3"`;
+		$endpoint = "http://developer.echonest.com/api/v4/track/upload";
+		print `curl -X POST "{$endpoint}" -d "api_key={$this->api_key}&url=http://{$_SERVER['HTTP_HOST']}/tracks/{$file}.mp3"`;
 
 	}
 

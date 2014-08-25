@@ -183,8 +183,6 @@ class ItemList extends CI_Model {
 		foreach ($files as $file){
 			$realpath = $file->getRealPath();
 			$tags = $this->get_id3_tags($file);
-			//print "|".json_encode($tags);
-			//exit;
 			$sql = array();
 			if (isset($tags['artist'][0])){
 				$artist = $this->check_foreign($tags['artist'][0],'ArtistName','artists');
@@ -217,13 +215,13 @@ class ItemList extends CI_Model {
 				);
 				$result[] = $this->db->insert_id();
 			} else {
-				$this->db->query("UPDATE music SET "
-					. "Filename=".$filename
-					. $sql
-					. " WHERE FileMD5='".$md5."';");
+				// $this->db->query("UPDATE music SET "
+				// 	. "Filename=".$filename
+				// 	. $sql
+				// 	. " WHERE FileMD5='".$md5."';");
 			}
 			if ($feedback){
-				print "<script>console.log('Writing: ".$count."/479 New: ".count($result)."')</script>";
+				print "<script>console.log('Writing: ".$count."/".count($files)." New: ".count($result)."')</script>";
 				flush();
 				ob_flush();
 			}

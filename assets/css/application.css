@@ -429,3 +429,10 @@ img#cover_art_image:hover {
 .compact-modal .btn {
 	padding: 3px 12px;
 }
+.form-control.success {
+	border: 1px solid rgb(139, 170, 139);
+	background: rgb(236, 245, 236);
+}
+.modal-footer-btn i {
+	line-height: 20px;
+}

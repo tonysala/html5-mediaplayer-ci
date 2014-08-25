@@ -204,7 +204,7 @@ class Mp3li extends Engine {
 		    curl_close($ch);
 		    $filesize = $fileinfo['download_content_length'];
 		    if ($fileinfo['content_type'] !== "audio/mpeg"){
-				print '|'.json_encode(array('error'=>true,'message'=>'unknown content type ('.$fileinfo['content_type'].')'));
+				print '|'.json_encode(array('error'=>true,'message'=>'Unknown content type ('.$fileinfo['content_type'].')'));
 				exit;
 			} else {
 				$title = preg_replace('/[^a-z0-9_]+/i','-',$title);
@@ -216,10 +216,6 @@ class Mp3li extends Engine {
 					@unlink($filename);
 				}
 				$target = fopen($filename, 'w');
-				if ($fileinfo['content_type'] !== "audio/mpeg"){
-					print '|'.json_encode(array('error'=>true,'message'=>'unknown content type ('.$fileinfo['content_type'].')'));
-					exit;
-				}
 				$ch = curl_init($link);
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 				curl_setopt($ch, CURLOPT_NOPROGRESS, false);
@@ -234,16 +230,16 @@ class Mp3li extends Engine {
 				if ($downloaded !== -1 && $downloaded < $filesize){
 					log_message('error','download interrupted '.$downloaded.'/'.$filesize);
 					@unlink($filename);
-					print json_encode(array('error'=>true,'message'=>'download interrupted'));
+					print json_encode(array('error'=>true,'message'=>'Download interrupted!'));
 					exit;
 				}
 				else if (!file_exists($filename)){
-					print json_encode(array('error'=>true,'message'=>'file could not be saved'));
+					print json_encode(array('error'=>true,'message'=>'File could not be saved!'));
 					exit;
 				}
 				else if ($this->previous_progress === 0){
 					@unlink($filename);
-					print json_encode(array('error'=>true,'message'=>'download could not start'));
+					print json_encode(array('error'=>true,'message'=>'Download could not start!'));
 					exit;
 				}
 				else {
@@ -251,7 +247,8 @@ class Mp3li extends Engine {
 					$md5 = md5_file($filename);
 					$filepath = "/var/www/player/tracks/".$md5.".mp3";
 					if (file_exists($filepath)){
-						print json_encode(['error'=>true,'message'=>'already downloaded']);
+						@unlink($filename);
+						print json_encode(['error'=>true,'message'=>'Already downloaded!']);
 						exit;
 					}
 					rename($filename,$filepath);
@@ -260,7 +257,7 @@ class Mp3li extends Engine {
 			}
 		}
 		else {
-			print json_encode(array('error'=>true,'message'=>'download link not found'));
+			print json_encode(array('error'=>true,'message'=>'Download link not found!'));
 			exit;
 		}
 	}
