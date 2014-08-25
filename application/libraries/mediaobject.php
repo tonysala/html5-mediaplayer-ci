@@ -10,8 +10,11 @@ class MediaObject {
 	public $Filename = null;
 	public $Filepath = null;
 	public $TrackName = null;
+	public $TrackEchoID = null;
 	public $ArtistID = null;
+	public $ArtistEchoID = null;
 	public $AlbumID = null;
+	public $AlbumEchoID = null;
 	public $GenreID = null;
 	public $AlbumName = null;
 	public $ArtistName = null;

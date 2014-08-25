@@ -31,7 +31,8 @@ $(document).ready(function(){
         results       : [],
         downloads     : [],
         default_engine: 'mp3li',
-        $editing_playlist_name : undefined
+        $editing_playlist_name : undefined,
+        $api_request  : undefined
     };
 
     var elements = {
@@ -180,16 +181,26 @@ $(document).ready(function(){
 				if (typeof changes.year !== "undefined"){
 					opts.Year = changes.year;
 				}
-				if (typeof changes.genre !== "undefined"){
-					opts.GenreName = changes.genre;
-					opts.GenreID = changes.genreID;
-				}
+                if (typeof changes.genre !== "undefined"){
+                    opts.GenreName = changes.genre;
+                    opts.GenreID = changes.genreID;
+                }
+                if (typeof changes.trackEchoID !== "undefined"){
+                    opts.TrackEchoID = changes.trackEchoID;
+                }
+                if (typeof changes.artistEchoID !== "undefined"){
+                    opts.ArtistEchoID = changes.artistEchoID;
+                }
+                if (typeof changes.albumEchoID !== "undefined"){
+                    opts.AlbumEchoID = changes.albumEchoID;
+                }
                 return this;
 			}
         };
     };
 
-    var media_objects = {};
+    // for debugging
+    window.media_objects = {};
 
     // Do setup stuff
     $.fn.getId = function(){
@@ -1252,7 +1263,6 @@ $(document).ready(function(){
                 console.log(data);
             });
         });
-
     };
 
     var add_playlist_listeners = function(){
@@ -1338,11 +1348,195 @@ $(document).ready(function(){
         }
     };
 
+    var identify_track = function(){
+        var md5 = media_objects[app_vars.selected[0]].opts.FileMD5;
+        var $button = $("#identify_button").find(".fa");
+        $button
+            .removeClass()
+            .addClass("fa fa-spin fa-cog")
+            .parent().prop({disabled:true});
+
+        app_vars.$api_request = $.ajax({
+            url: "xhr/analyse_file",
+            data: {
+                md5 : md5
+            },
+            type: "get",
+            dataType: "json"
+        })
+        .done(function(data){
+            console.log(data.response);
+            if (data.response.status.code !== 0){
+                console.warn(data.response.status.message);
+                $button
+                    .removeClass()
+                    .addClass("fa fa-warning")
+                    .attr({
+                        title:"Failed [Error "+data.response.status.code+"]"
+                    })
+                    .parent().prop({disabled:true});
+            }
+            else if (typeof data.response.track === "object"){
+                if (data.response.track.status === "pending"){
+                    $button
+                        .removeClass()
+                        .addClass("fa fa-check")
+                        .attr({
+                            title:"Retry for better accuracy"
+                        })
+                        .parent().prop({disabled:false});
+                }
+                else {
+                    $button
+                        .removeClass()
+                        .addClass("fa fa-check")
+                        .attr({
+                            title:"Done."
+                        })
+                        .parent().prop({disabled:true});
+                }
+                console.log(data.response.track);
+                $track_edit = $("#track_edit");
+                $artist_edit = $("#artist_edit");
+                $album_edit = $("#album_edit");
+                $song_id = $("#song_id_field");
+                $artist_id = $("#artist_id_field");
+
+                if (typeof data.response.track.title !== "undefined" && data.response.track.title.length){
+                    $track_edit.val(data.response.track.title).addClass("success");
+                }
+                if (typeof data.response.track.artist !== "undefined" && data.response.track.artist.length){
+                    $artist_edit.val(data.response.track.artist).addClass("success");
+                }
+                if (typeof data.response.track.release !== "undefined" && data.response.track.release.length){
+                    $album_edit.val(data.response.track.release).addClass("success");
+                }
+                if (typeof data.response.track.song_id !== "undefined" && data.response.track.song_id.length){
+                    $song_id.val(data.response.track.song_id);
+                }
+                if (typeof data.response.track.artist_id !== "undefined" && data.response.track.artist_id.length){
+                    $artist_id.val(data.response.track.artist_id);
+                }
+            }
+        })
+        .fail(function(data){
+            if (data.status === 0 && data.statusText === 'abort') {
+                console.log("request aborted");
+                return;
+            }
+            $button
+                .removeClass()
+                .addClass("fa fa-warnng")
+                .attr({
+                    title:"Failed."
+                })
+                .parent().prop({disabled:true});
+            show_error_modal("Could not analyse track.");
+        });
+    }
+
+    var save_tags = function(close){
+        var $button = $("edit_tags_confirm");
+        var $apply_button = $("#apply_tags_changes .fa");
+        var sel = app_vars.selected;
+        var data = {};
+        if ($("#track_edit").val() !== ""){
+            data.track = $("#track_edit").val();
+        }
+        if ($("#artist_edit").val() !== ""){
+            data.artist = $("#artist_edit").val();
+        }
+        if ($("#album_edit").val() !== ""){
+            data.album = $("#album_edit").val();
+        }
+        if ($("#year_edit").val() !== ""){
+            data.year = $("#year_edit").val();
+        }
+        if ($("#genre_edit").val() !== ""){
+            data.genre = $("#genre_edit").val();
+        }
+        if ($("#song_id_field").val() !== ""){
+            data.song_id = $("#song_id_field").val();
+        }
+        if ($("#artist_id_field").val() !== ""){
+            data.artist_id = $("#artist_id_field").val();
+        }
+
+        if (Object.keys(data).length === 0){
+            $("#id3_modal").modal('hide');
+            return;
+        }
+        data.id = sel;
+        $button.text("Saving...").prop({disabled:true});
+        $apply_button
+            .removeClass()
+            .addClass("fa fa-spinner fa-spin")
+            .attr({title:"Saving..."})
+            .parent().prop({disabled:true});
+        $.ajax({
+            url  : "xhr/edit_tags",
+            data : data,
+            type : "post"
+        })
+        .done(function(data){
+            if (data.error === false){
+                if (close){
+                    $("#id3_modal").modal('hide');
+                }
+                else {
+                    $button.text("Success");
+                    $apply_button
+                        .removeClass()
+                        .addClass("fa fa-check")
+                        .attr({title:"Success"})
+                        .parent().prop({disabled:false});
+                    }
+                for (var c = 0; c < sel.length; c++){
+                    media_objects[sel[c]].edit(data.updated);
+                }
+            }
+            else {
+                console.warn('Error - '+data.message);
+                $("#edit_failed_error").text("Error occured ("+data.message+")").show();
+                $button.text("Failed, Retry");
+                $apply_button
+                    .removeClass()
+                    .addClass("fa fa-warning")
+                    .attr({title:"Failed, Retry"})
+                    .parent().prop({disabled:false});
+            }
+        })
+        .fail(function(e){
+            $button.text("Failed, Retry");
+            $("#edit_failed_error").text("Unknown error occured!").show();
+            $apply_button
+                .removeClass()
+                .addClass("fa fa-warning")
+                .attr({title:"Failed, Retry"})
+                .parent().prop({disabled:false});
+            console.warn(e);
+        });
+    }
+
     var show_edit_tags_modal = function(){
         hide_menu();
-        $("#edit_tags_confirm").text("Save changes");
+        if (typeof app_vars.$api_request !== "undefined"){
+            app_vars.$api_request.abort();
+        }
+        $("#edit_tags_confirm").text("Save & Close");
+        $("#apply_tags_changes .fa")
+            .removeClass()
+            .addClass("fa fa-save")
+            .attr({title:"Save Changes"})
+            .parent().prop({disabled:false});
         $("#edit_failed_error").hide()
         $("#selected_for_edit_count").text(app_vars.selected.length);
+        $("#artist_edit").val('').removeClass("success");
+        $("#album_edit").val('').removeClass("success");
+        $("#year_edit").val('').removeClass("success");
+        $("#genre_edit").val('').removeClass("success");
+        $("#song_id_field").val('');
+        $("#artist_id_field").val('');
         if (app_vars.selected.length === 1){
             var obj = media_objects[app_vars.selected[0]].opts;
             console.log(obj);
@@ -1352,15 +1546,21 @@ $(document).ready(function(){
             $("#year_orig").val(obj.Year);
             $("#genre_orig").val(obj.GenreName);
             $("#multi_edit_warning").hide();
-            $("#identify_button").text("Identify Tracks").prop({disabled:false});
+            $("#identify_button .fa").removeClass()
+                    .addClass("fa fa-tasks")
+                    .attr({
+                        title:"Identify Tracks"
+                    })
+                    .parent().prop({disabled:false});
             $("#track_edit").val('').prop({disabled:false}).removeClass("success");
-            $("#artist_edit").val('').removeClass("success");
-            $("#album_edit").val('').removeClass("success");
-            $("#year_edit").val('').removeClass("success");
-            $("#genre_edit").val('').removeClass("success");
         }
         else if (app_vars.selected.length > 1){
-            $("#identify_button").text("Identify Track").prop({disabled:true});
+            $("#identify_button .fa").removeClass()
+                    .addClass("fa fa-tasks")
+                    .attr({
+                        title:"Identify Tracks"
+                    })
+                    .parent().prop({disabled:true});
             $("#track_orig").val('');
             $("#artist_orig").val('');
             $("#album_orig").val('');
@@ -1368,10 +1568,6 @@ $(document).ready(function(){
             $("#genre_orig").val('');
             $("#multi_edit_warning").show();
             $("#track_edit").val('').prop({disabled:true}).removeClass("success");
-            $("#artist_edit").val('').removeClass("success");
-            $("#album_edit").val('').removeClass("success");
-            $("#year_edit").val('').removeClass("success");
-            $("#genre_edit").val('').removeClass("success");
         } 
         else {
             throw new Error('cannot show edit tags page when no item has been selected');
@@ -1482,58 +1678,6 @@ $(document).ready(function(){
         }
     });
     // End ContextMenu Code
-
-	// Edit tags code
-	$("#edit_tags_confirm").on("click", function(){
-		$button = $(this);
-		var sel = app_vars.selected;
-		var data = {};
-		if ($("#track_edit").val() !== ""){
-			data.track = $("#track_edit").val();
-		}
-		if ($("#artist_edit").val() !== ""){
-			data.artist = $("#artist_edit").val();
-		}
-		if ($("#album_edit").val() !== ""){
-			data.album = $("#album_edit").val();
-		}
-		if ($("#year_edit").val() !== ""){
-			data.year = $("#year_edit").val();
-		}
-		if ($("#genre_edit").val() !== ""){
-			data.genre = $("#genre_edit").val();
-		}
-		if (Object.keys(data).length === 0){
-            $("#id3_modal").modal('hide');
-            return;
-		}
-        data.id = sel;
-        $button.text("Loading...");
-		$.ajax({
-			url  : "xhr/edit_tags",
-			data : data,
-			type : "post"
-		})
-		.done(function(data){
-			if (data.error === false){
-				$("#id3_modal").modal('hide');
-				for (var c = 0; c < sel.length; c++){
-					media_objects[sel[c]].edit(data.updated);
-				}
-			}
-			else {
-				console.warn('Error - '+data.message);
-                $("#edit_failed_error").text("Error occured ("+data.message+")").show();
-				$button.text("Failed, Retry");
-			}
-		})
-		.fail(function(e){
-			$button.text("Failed, Retry");
-            $("#edit_failed_error").text("Unknown error occured!").show();
-			console.warn(e);
-		});
-	});
-	// End Edit tags code
 
     // Search code
     $("#item_filter").on("keyup",function(e){
@@ -1925,50 +2069,15 @@ $(document).ready(function(){
 		});
 	});
 
+    // Edit tags code
+    $("#edit_tags_confirm").on("click", function(){
+        $button = $(this);
+        save_tags(true);
+    });
+    // End Edit tags code
+
     $("#identify_button").on("click",function(){
-        var md5 = media_objects[app_vars.selected[0]].opts.FileMD5;
-        var $button = $(this);
-        $button.text("Analysing...").prop({disabled:true});
-        $.ajax({
-            url: "xhr/analyse_file",
-            data: {
-                md5 : md5
-            },
-            type: "get",
-            dataType: "json"
-        })
-        .done(function(data){
-            console.log(data.response);
-            if (data.response.status.code !== 0){
-                console.warn(data.response.status.message);
-                $("#identify_button").text("Failed [Error "+data.response.status.code+"]").prop({disabled:true});
-            }
-            else if (typeof data.response.track === "object"){
-                if (data.response.track.status === "pending"){
-                    $("#identify_button").text("Retry for better accuracy").prop({disabled:false});
-                }
-                else {
-                    $("#identify_button").text("Done.").prop({disabled:true});
-                }
-                console.log(data.response.track);
-                $track_edit = $("#track_edit");
-                $artist_edit = $("#artist_edit");
-                $album_edit = $("#album_edit");
-                if (data.response.track.title.length){
-                    $track_edit.val(data.response.track.title).addClass("success");
-                }
-                if (data.response.track.artist.length){
-                    $artist_edit.val(data.response.track.artist).addClass("success");
-                }
-                if (data.response.track.release.length){
-                    $album_edit.val(data.response.track.release).addClass("success");
-                }
-            }
-        })
-        .fail(function(data){
-            $("#identify_button").text("Failed").prop({disabled:false});
-            show_error_modal("Could not analyse track.");
-        });
+        identify_track();
     });
     
     $("#client_download_button").on("click",function(){
@@ -1993,6 +2102,10 @@ $(document).ready(function(){
             show_edit_tags_modal();
         });
         $("#id3_modal").removeClass("fade").modal('hide');
+    });
+
+    $("#apply_tags_changes").on("click",function(){
+        save_tags(false);
     });
 
 });

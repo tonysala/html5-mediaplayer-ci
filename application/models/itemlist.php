@@ -79,15 +79,27 @@ class ItemList extends CI_Model {
 			$sql_section[] = " Year = ".$this->db->escape($post['year'])." ";
 			$return['year'] = $post['year'];
 		}
+		if (isset($post['song_id']) && !empty($post['song_id'])){
+			$sql_section[] = " EchoID = ".$this->db->escape($post['song_id'])." ";
+			$return['trackEchoID'] = $post['song_id'];
+		}
 		if (isset($post['artist']) && !empty($post['artist'])){
 			$artist = $this->check_foreign($post['artist'],'ArtistName','artists');
 			$sql_section[] = " ArtistID = ".$this->db->escape_str($artist)." ";
+			if (isset($post['artist_id']) && !empty($post['artist_id'])){
+				$this->add_foreign_echo_id("artists", $artist, $post['artist_id']);
+				$return['artistEchoID'] = $post['artist_id'];
+			}
 			$return['artist'] = $post['artist'];
 			$return['artistID'] = $artist;
 		}
 		if (isset($post['album']) && !empty($post['album'])){
 			$album = $this->check_foreign($post['album'],'AlbumName','albums');
 			$sql_section[] = " AlbumID = ".$this->db->escape_str($album)." ";
+			if (isset($post['album_id']) && !empty($post['album_id'])){
+				$this->add_foreign_echo_id("albums", $album, $post['album_id']);
+				$return['albumEchoID'] = $post['album_id'];
+			}
 			$return['album'] = $post['album'];
 			$return['albumID'] = $album;
 		}
@@ -125,12 +137,13 @@ class ItemList extends CI_Model {
 	}
 
 	public function get_item($id){
-		$row = $this->db->query("SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName
-		FROM music
-			LEFT JOIN artists ON music.ArtistID = artists.ID
-			LEFT JOIN albums ON music.AlbumID = albums.ID
-			LEFT JOIN genres ON music.GenreID = genres.ID
-		WHERE `music`.`ID` = ".$this->db->escape($id)." LIMIT 1;")->first_row();
+		$row = $this->db->query("SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName, 
+			artists.EchoID AS ArtistEchoID, albums.EchoID AS AblumEchoID , music.EchoID AS TrackEchoID 
+			FROM music 
+				LEFT JOIN artists ON music.ArtistID = artists.ID 
+				LEFT JOIN albums ON music.AlbumID = albums.ID 
+				LEFT JOIN genres ON music.GenreID = genres.ID 
+		WHERE `music`.`ID` IN (".implode(",",$this->db->escape_str($id)).");")->first_row();
 		if (empty($row)){
 			return false;
 		}
@@ -144,12 +157,13 @@ class ItemList extends CI_Model {
 	}
 
 	public function load_db_objects(){
-		$items = $this->db->query('SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName
-		FROM music
-			LEFT JOIN artists ON music.ArtistID = artists.ID
-			LEFT JOIN albums ON music.AlbumID = albums.ID
-			LEFT JOIN genres ON music.GenreID = genres.ID
-		ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName;');
+		$items = $this->db->query('SELECT music.*, albums.AlbumName, artists.ArtistName, genres.GenreName, 
+			artists.EchoID AS ArtistEchoID, albums.EchoID AS AblumEchoID , music.EchoID AS TrackEchoID 
+			FROM music 
+				LEFT JOIN artists ON music.ArtistID = artists.ID 
+				LEFT JOIN albums ON music.AlbumID = albums.ID 
+				LEFT JOIN genres ON music.GenreID = genres.ID 
+			ORDER BY ArtistName+0<>0 DESC, ArtistName+0, ArtistName');
 
 		$this->_db_count = $items->num_rows();
 		$results = $items->result();
@@ -238,6 +252,13 @@ class ItemList extends CI_Model {
 			$this->db->query("INSERT INTO `".$table."` SET ".$foreign_col." = ".$value);
 			return $this->db->insert_id();
 		}
+	}
+
+	public function add_foreign_echo_id($table, $column_id, $echo_id){
+		$this->db->query("UPDATE ".$table." SET "
+			. " EchoID   = " . $this->db->escape($echo_id)
+			. " WHERE ID = " . $this->db->escape($column_id).";");
+		return true;
 	}
 
 	public function get_fullpath($id){

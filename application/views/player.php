@@ -174,17 +174,20 @@
 						<input type="text" class="form-control" id="artist_edit"/>
 						<span>Year Released:</span>
 						<input type="text" class="form-control" id="year_edit"/>
+						<input type="hidden" id="song_id_field">
+						<input type="hidden" id="artist_id_field">
 					</div>
 				</div>
 			</div>
 			<div class="modal-footer">
 				<div class="btn-group" style="margin-right: 5px;">
 	                <button type="button" class="btn btn-default modal-footer-btn" id="edit_modal_prev" title='Previous Item'><i class="fa fa-arrow-left"></i></button>
+					<button type="button" class="btn btn-default modal-footer-btn" id="identify_button"><i class="fa fa-tasks"></i> Analyse</button>
+	                <button type="button" class="btn btn-default modal-footer-btn" id="apply_tags_changes" title='Save Tags'><i class="fa fa-pencil"></i> Apply</button>
 	                <button type="button" class="btn btn-default modal-footer-btn" id="edit_modal_next" title='Next Item'><i class="fa fa-arrow-right"></i></button>
 	            </div>
 				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				<button type="button" class="btn btn-default" id="identify_button">Identify Track</button>
-				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save changes</button>
+				<button type="button" class="btn btn-primary" id="edit_tags_confirm">Save &amp; Close</button>
 			</div>
 		</div>
 	</div>

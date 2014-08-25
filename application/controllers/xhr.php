@@ -113,7 +113,7 @@ class Xhr extends CI_Controller {
 
 	public function get_cover_art(){
 		if ($id = $this->input->get("id")){
-			$item = $this->itemlist->get_item($id);
+			$item = $this->itemlist->get_item([$id]);
 			if (!empty($item->ArtistName) && !empty($item->AlbumName)){
 				$search_term = $item->ArtistName." ".$item->AlbumName." ".$item->Year." album cover";
 				if (!$url = $this->_get_google_img($search_term)){
@@ -265,7 +265,7 @@ class Xhr extends CI_Controller {
 			$fetcher = new Fetcher($engine);
 			$file = $fetcher->download($href, $title);
 			if (is_array($file) && !empty($file)){
-				print json_encode(["error"=>false,"inserted"=>$this->itemlist->get_item($file[0])]);
+				print json_encode(["error"=>false,"inserted"=>$this->itemlist->get_item($file)]);
 			} else {
 				print "|".json_encode(["error"=>true,'message'=>'unknown error']);
 			}
