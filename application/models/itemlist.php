@@ -262,7 +262,7 @@ class ItemList extends CI_Model {
 	}
 
 	public function get_fullpath($id){
-		$item = $this->get_item($id);
+		$item = $this->get_item([$id]);
 		if ($item !== false){
 			$fullpath = $item->Filename;
 			$basepath = '/var/www/player/';

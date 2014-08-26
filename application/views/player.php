@@ -226,6 +226,24 @@
 		</div>
 	</div>
 </div>
+<div class="modal fade" id="login_modal" data-backdrop="static">
+	<div class="modal-dialog modal-sm compact-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Login</h5>
+			</div>
+			<div class="modal-body">
+				<span>Username:</span>
+				<input type="text" id="username_field" class="form-control"/>
+				<span>Password:</span>
+				<input type="password" id="password_field" class="form-control"/>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="login_confirm">Login</button>
+			</div>
+		</div>
+	</div>
+</div>
 <form action="xhr/client_download" method="post" id="download_request_form">
 
 </form>
