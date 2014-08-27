@@ -119,7 +119,7 @@ class Kohit extends Engine {
 				return false;
 			} else {
 				$title = preg_replace('/[^\s\&\'\(\)a-zA-Z0-9\-_]+/','-',$title);
-				$filename = "/var/www/player/tracks/".$title.".mp3";
+				$filename = "/var/www/player/store/".$title.".mp3";
 				if (file_exists($filename)){
 					return false;
 				}
@@ -211,7 +211,7 @@ class Mp3li extends Engine {
 				if (!strlen($title)){
 					$title = time();
 				}
-				$filename = "/var/www/player/tracks/".$title.".mp3";
+				$filename = "/var/www/player/store/".$title.".mp3";
 				if (file_exists($filename)){
 					@unlink($filename);
 				}
@@ -245,7 +245,7 @@ class Mp3li extends Engine {
 				else {
 					chmod($filename,0666);
 					$md5 = md5_file($filename);
-					$filepath = "/var/www/player/tracks/".$md5.".mp3";
+					$filepath = "/var/www/player/store/".$md5.".mp3";
 					if (file_exists($filepath)){
 						@unlink($filename);
 						print json_encode(['error'=>true,'message'=>'Already downloaded!']);

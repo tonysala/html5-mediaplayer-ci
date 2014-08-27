@@ -57,7 +57,7 @@ $config['uri_protocol']	= 'AUTO';
 | http://codeigniter.com/user_guide/general/urls.html
 */
 
-$config['url_suffix'] = '.py';
+$config['url_suffix'] = '';
 
 /*
 |--------------------------------------------------------------------------

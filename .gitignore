@@ -1,6 +1,8 @@
-tracks/*
+store/*
 user_guide/*
 work/*
 project
 license
 application/logs/*
+.DS_Store
+

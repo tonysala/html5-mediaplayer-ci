@@ -2,7 +2,7 @@
 
 Class Auth_Hook {
 
-	private $_black_list = ["tracks", "xhr"];
+	private $_login_required = ["tracks", "xhr"];
 	private $CI;
 
 	public function __construct(){
@@ -10,10 +10,14 @@ Class Auth_Hook {
 	}
 
 	public function authenticate_access(){
-		if (in_array($this->CI->uri->segment(1),$this->_black_list)){
+		if (in_array($this->CI->uri->segment(1),$this->_login_required)){
 			if ($this->CI->user->logged_in() === false){
-				header("HTTP 1.1/Forbidden");
-				header("Location: /");
+				if ($this->CI->uri->segment(1) === "xhr"){
+					header("HTTP 1.0/ 404 Forbidden");
+				}
+				else {
+					header("Location: /");
+				}
 				exit;
 			}
 		}

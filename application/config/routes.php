@@ -37,7 +37,7 @@
 | in the URL cannot be matched to a valid route.
 |
 */
-
+$route['tracks/(:any)'] = "tracks/get/$1";
 $route['default_controller'] = "main";
 $route['404_override'] = '';
 

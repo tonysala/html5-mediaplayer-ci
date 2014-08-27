@@ -52,7 +52,7 @@ $(document).ready(function(){
         return {
             opts: opts,
             url: function(){
-                return opts.Filename.replace("/var/www/player",window.location.origin);
+                return "/tracks/"+opts.FileMD5;
             },
             play: function(){       
                 var $ele = opts.$element;

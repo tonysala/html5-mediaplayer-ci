@@ -104,7 +104,7 @@ html, body {
     height: 28px;
 	margin: 0px;
 }
-.item-row div, .current-track-container, .result-row div, .download-row div, .broken-row div {
+.item-row div, .current-track-container, .result-row div, .download-row div, .broken-item-row div {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	overflow: hidden;
@@ -435,4 +435,7 @@ img#cover_art_image:hover {
 }
 .modal-footer-btn i {
 	line-height: 20px;
+}
+.resultactions {
+	overflow:visible!important;
 }

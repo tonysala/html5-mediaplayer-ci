@@ -38,7 +38,7 @@ class Xhr extends CI_Controller {
 			$return = ["error"=>false,"affected"=>$this->db->affected_rows()];
 			foreach($md5s as $md5){
 				if (preg_match('/[a-f0-9]+/i',$md5)){
-					@unlink("/var/www/player/tracks/".$md5.".mp3");
+					@unlink("/var/www/player/store/".$md5.".mp3");
 				}
 				else {
 					$return = [
