@@ -69,10 +69,10 @@ html, body {
     color: #FFF;
 }
 .selected-row.dark {
-    transition: all 0.4s ease;
+/*    transition: all 0.4s ease;
     -webkit-transition: all 0.4s ease;
     -moz-transition: all 0.4s ease;
-    -o-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;*/
     border-top: 1px solid #2271A5;
     background: #3A9ADA;
     color: white;
@@ -246,6 +246,9 @@ html, body {
 }
 .sidebar-row:first-child {
 	border-top:0;
+}
+#playlists_sidebar_container .sidebar-row:first-child {
+	border-top: 1px solid #F0F0F0;
 }
 .sidebar-row {
 	padding:3px;

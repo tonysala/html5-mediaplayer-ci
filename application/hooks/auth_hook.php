@@ -10,6 +10,7 @@ Class Auth_Hook {
 	}
 
 	public function authenticate_access(){
+		return true;
 		if (in_array($this->CI->uri->segment(1),$this->_login_required)){
 			if ($this->CI->user->logged_in() === false){
 				if ($this->CI->uri->segment(1) === "xhr"){

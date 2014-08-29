@@ -11,6 +11,8 @@
 		<script type="text/javascript" src="assets/js/scrollintoview.js"></script>
         <script type="text/javascript" src="assets/js/application.js"></script>
 		<script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
+		<title>Music Player</title>
+		<link href="./favicon.ico" rel="shortcut icon">
 	</head>
 	<body>
 		

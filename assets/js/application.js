@@ -32,7 +32,11 @@ $(document).ready(function(){
         downloads     : [],
         default_engine: 'mp3li',
         $editing_playlist_name : undefined,
-        $api_request  : undefined
+        $api_request  : undefined,
+        touchevent    : {
+            time : undefined,
+            pos  : undefined
+        }
     };
 
     var elements = {
@@ -263,7 +267,7 @@ $(document).ready(function(){
                         .css({"line-height": "5px"})
                     )
                     
-                )   
+                );
         }
         var $element = $("<div></div>")
 			.addClass("row "+classname)
@@ -377,7 +381,7 @@ $(document).ready(function(){
 				})
 				.text("("+value.length+")")
 			)
-		.insertAfter($("#queue_sidebar_row"));
+		.appendTo($("#playlists_sidebar_container"));
 
         $("<li></li>")
             .append($("<a></a>")
@@ -698,9 +702,7 @@ $(document).ready(function(){
         return;
     };
 
-    var show_menu = function(){
-        var pos_y = event.clientY;
-        var pos_x = event.clientX;
+    var show_menu = function(pos_x , pos_y){
         var window_height = $(window).height();
         var window_width  = $(window).width();
         var menu_height   = $("#contextmenu").height();
@@ -1133,8 +1135,28 @@ $(document).ready(function(){
     var add_item_row_listeners = function(){
         elements.$library_view
         .on("dblclick",".item-row",function(){
-            media_objects[$(this).getId()].click();
-            // item_clicked($(this).getId());
+            items_selected([$(this).getId()]);
+        })
+        .on("touchstart",".item-row",function(e){
+            // Reset previous touch data
+            app_vars.touch = {time:undefined,pos:undefined};
+            app_vars.touch.time = e.timeStamp;
+            app_vars.touch.pos = e.originalEvent.changedTouches[0].screenY;
+        })
+        .on("touchend",".item-row",function(e){
+            var touch_event = e.originalEvent.changedTouches[0];
+            if (touch_event.screenY !== app_vars.touch.pos){
+            }
+            else if (e.timeStamp < app_vars.touch.time + 350){
+                items_selected([]);
+                media_objects[$(this).getId()].click();
+            }
+            else {
+                items_selected([$(this).getId()]);
+                show_menu(touch_event.screenX, touch_event.screenY);
+            }
+            // Clear touch data
+            app_vars.touch = {time:undefined,pos:undefined};
         })
         .on("mouseup",".item-row",function(event){
             var menu_on = ($("#contextmenu").css("display") !== "none");
@@ -1156,7 +1178,7 @@ $(document).ready(function(){
                 } else {
                     set_rating($row.data().rating);
                 }
-                show_menu();
+                show_menu(event.clientX, event.clientY);
                 event.preventDefault();
             }
             // left click (selected item)
@@ -1324,7 +1346,7 @@ $(document).ready(function(){
             var file = {
                 "path" : media_objects[this].opts.Filename,
                 "name" : media_objects[this].opts.TrackName
-            }
+            };
             files.push(file);
         });
         if (files.length){
@@ -1433,7 +1455,7 @@ $(document).ready(function(){
                 .parent().prop({disabled:true});
             show_error_modal("Could not analyse track.");
         });
-    }
+    };
 
     var save_tags = function(close){
         var $button = $("edit_tags_confirm");
@@ -1516,7 +1538,7 @@ $(document).ready(function(){
                 .parent().prop({disabled:false});
             console.warn(e);
         });
-    }
+    };
 
     var show_edit_tags_modal = function(){
         hide_menu();
@@ -1529,7 +1551,7 @@ $(document).ready(function(){
             .addClass("fa fa-save")
             .attr({title:"Save Changes"})
             .parent().prop({disabled:false});
-        $("#edit_failed_error").hide()
+        $("#edit_failed_error").hide();
         $("#selected_for_edit_count").text(app_vars.selected.length);
         $("#artist_edit").val('').removeClass("success");
         $("#album_edit").val('').removeClass("success");
@@ -1590,6 +1612,7 @@ $(document).ready(function(){
     var setup_player = function(){
 
         $("#playlist_list").slideUp();
+        $("#playlists_sidebar_container").slideUp();
         $(".slider-pointer").css({'left': (player.volume * ($(".slider-line").width() - 4)) });
         $("#library_sidebar_row").css({"background":"ghostwhite"});
 
@@ -2046,6 +2069,25 @@ $(document).ready(function(){
             },$(this));
         });
 
+        $("#settings_sidebar_row").on("click",function(){
+            switch_view("settings",function(){
+                $(".pageview").hide();
+                $("#settings_view").show();
+                console.debug("settings page opened");
+            },$(this));
+        });
+
+        $("#playlists_sidebar_row").on("click",function(){
+            if ($("#playlists_sidebar_container").css("display") === "none"){
+                $("#playlists_sidebar_container").slideDown();
+                $("#playlist_row_caret").css('transform','rotate(180deg)');
+            }
+            else {
+                $("#playlists_sidebar_container").slideUp();
+                $("#playlist_row_caret").css('transform','rotate(0deg)');
+            }
+        });
+
         // Sort items code
         $("#sort_menu > li").on("click",function(){
             var sortby = $(this).data('sortby');
@@ -2143,7 +2185,7 @@ $(document).ready(function(){
                     setup_player();
                 } 
                 else {
-                    console.warn("Failed!")
+                    console.warn("Failed!");
                 }
             }
             else {
@@ -2175,7 +2217,7 @@ $(document).ready(function(){
         .fail(function(e){
             not_logged_in();
         });
-    }
+    };
 
     var not_logged_in = function(){
         $("#loading_modal").modal('hide');
@@ -2183,7 +2225,7 @@ $(document).ready(function(){
         $("#login_confirm").on("click",function(){
             authenticate_details($("#username_field").val(),$("#password_field").val());
         });
-    }
+    };
 
     $("#loading_modal").modal();
     authenticate_user();

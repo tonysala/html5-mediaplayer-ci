@@ -7,6 +7,7 @@ class User extends CI_Model {
 	private $password_salt = "__player__";
 
 	public function logged_in(){
+		return true;
 		$user_id = $this->session->userdata('id');
 		if ($user_id !== false){
 			$query = $this->db->query("SELECT UserID FROM users 

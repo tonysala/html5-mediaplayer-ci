@@ -50,6 +50,12 @@
 					<span>LIBRARY</span>
 					<span style='text-align:right;' id='library_item_count'>(0)</span>
 				</div>
+				<div class="sidebar-row" id='playlists_sidebar_row'>
+					<span>PLAYLISTS&nbsp;&nbsp;&nbsp;<i id="playlist_row_caret" class="fa fa-caret-down"></i></span>
+				</div>
+				<div id="playlists_sidebar_container">
+					<!-- playlist links go here -->
+				</div>
 				<div class="sidebar-row" id='find_new_sidebar_row'>
 					<span>FIND NEW MUSIC</span>
 				</div>
@@ -91,19 +97,18 @@
 			</div>
 			<div id="page_views_container">
 				<div class="row items-container pageview" id='library_view'>
-					<div class="col-md-12">
-
-	                </div>
+					<div class="col-md-12"></div>
 	            </div>
 	            <div class="row pageview" id="downloads_view">
-					<div class="col-md-12">
-
-					</div>
+					<div class="col-md-12"></div>
 	            </div>
 	            <div class="row pageview" id="search_view">
-					<div class="col-md-12">
-
-					</div>
+					<div class="col-md-12"></div>
+	            </div>
+	            <div class="row pageview" id="settings_view">
+	            	<div class="col-md-12">
+	            		<h1>Coming soon!</h1>
+	            	</div>
 	            </div>
 	        </div>
 		</div>
